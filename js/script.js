@@ -340,6 +340,7 @@ function initThemeSwitcher() {
 
 		currentTheme = theme.id
 		themeRequestId = requestId
+		page.dataset.pageTheme = theme.id
 		toggle.dataset.theme = theme.id
 		toggle.style.setProperty('--theme-switcher-accent', theme.accent)
 		toggle.setAttribute('aria-label', `Zmien wariant tla strony. Aktualnie: ${theme.label}`)
@@ -352,7 +353,6 @@ function initThemeSwitcher() {
 			}
 
 			const backgroundValue = `url("${imageUrl}")`
-			page.dataset.pageTheme = theme.id
 			page.style.setProperty('--page-bg-image', backgroundValue)
 			page.style.backgroundImage = backgroundValue
 
@@ -685,6 +685,7 @@ function initExpandingPanels() {
 
 function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focusableSelector, historyApi) {
 	const instantPanelQuery = panel.id === 'contact-panel' ? window.matchMedia('(max-width: 640px)') : null
+	const panelScrollRoot = panel.querySelector('[data-panel-scroll-root]')
 	let isOpen = false
 	let closeTimerId = 0
 	let focusTimerId = 0
@@ -726,6 +727,18 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 	const scheduleSwipeReset = () => {
 		window.clearTimeout(swipeResetTimerId)
 		swipeResetTimerId = window.setTimeout(resetSwipeCloseGesture, 180)
+	}
+
+	const normalizeWheelDelta = event => {
+		if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
+			return event.deltaY * 16
+		}
+
+		if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+			return event.deltaY * window.innerHeight
+		}
+
+		return event.deltaY
 	}
 
 	const getFocusableElements = () =>
@@ -878,6 +891,40 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 		}
 	}
 
+	const handlePanelWheelForwarding = event => {
+		if (!isOpen || event.defaultPrevented || event.ctrlKey || !panelScrollRoot) {
+			return
+		}
+
+		const verticalDelta = Math.abs(event.deltaY)
+		const horizontalDelta = Math.abs(event.deltaX)
+
+		if (verticalDelta <= horizontalDelta || verticalDelta < 1) {
+			return
+		}
+
+		const eventTarget = event.target instanceof Element ? event.target : null
+		const isHoveringScrollableContent = eventTarget?.closest('[data-panel-scroll-root]')
+
+		if (isHoveringScrollableContent) {
+			return
+		}
+
+		const maxScrollTop = panelScrollRoot.scrollHeight - panelScrollRoot.clientHeight
+		if (maxScrollTop <= 0) {
+			return
+		}
+
+		const nextScrollTop = Math.max(0, Math.min(panelScrollRoot.scrollTop + normalizeWheelDelta(event), maxScrollTop))
+
+		if (Math.abs(nextScrollTop - panelScrollRoot.scrollTop) < 0.5) {
+			return
+		}
+
+		event.preventDefault()
+		panelScrollRoot.scrollTop = nextScrollTop
+	}
+
 	trigger.addEventListener('click', () => {
 		openPanel(false)
 	})
@@ -892,6 +939,7 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 
 	closeButton.addEventListener('click', closePanel)
 	window.addEventListener('wheel', handleWheelSwipeClose, { passive: false, capture: true })
+	panel.addEventListener('wheel', handlePanelWheelForwarding, { passive: false })
 	panel.addEventListener('transitionend', event => {
 		if (event.target === panel && !isOpen && (event.propertyName === 'width' || event.propertyName === 'height')) {
 			finishClose()
@@ -1006,15 +1054,52 @@ function initContactPanel() {
 
 	const fileInput = form.querySelector('input[name="attachments"]')
 	const fileLabel = form.querySelector('[data-file-label]')
+	const submitButton = form.querySelector('.contact-form__submit')
+	const submitButtonText = submitButton ? submitButton.querySelector('span') : null
+	const statusMessage = form.querySelector('[data-contact-status]')
+	const endpoint = form.getAttribute('action') || 'send-email.php'
+	const defaultFileLabel = fileLabel ? fileLabel.textContent : ''
+	const defaultSubmitLabel = submitButtonText ? submitButtonText.textContent : ''
+
+	const setStatus = (message = '', state = '') => {
+		if (!statusMessage) {
+			return
+		}
+
+		statusMessage.hidden = !message
+		statusMessage.textContent = message
+
+		if (state) {
+			statusMessage.dataset.state = state
+			return
+		}
+
+		delete statusMessage.dataset.state
+	}
+
+	const setSubmittingState = isSubmitting => {
+		form.classList.toggle('is-submitting', isSubmitting)
+
+		if (!submitButton) {
+			return
+		}
+
+		submitButton.disabled = isSubmitting
+		submitButton.setAttribute('aria-busy', String(isSubmitting))
+
+		if (submitButtonText) {
+			submitButtonText.textContent = isSubmitting ? 'Wysyłanie...' : defaultSubmitLabel
+		}
+	}
 
 	if (fileInput && fileLabel) {
 		fileInput.addEventListener('change', () => {
 			const count = fileInput.files ? fileInput.files.length : 0
-			fileLabel.textContent = count === 0 ? 'Dołącz grafiki, brief albo projekt' : `Wybrane pliki: ${count}`
+			fileLabel.textContent = count === 0 ? defaultFileLabel : `Wybrane pliki: ${count}`
 		})
 	}
 
-	form.addEventListener('submit', event => {
+	form.addEventListener('submit', async event => {
 		event.preventDefault()
 
 		if (!form.reportValidity()) {
@@ -1022,28 +1107,39 @@ function initContactPanel() {
 		}
 
 		const formData = new FormData(form)
-		const name = String(formData.get('name') || '').trim()
-		const email = String(formData.get('email') || '').trim()
-		const subject = String(formData.get('subject') || '').trim()
-		const message = String(formData.get('message') || '').trim()
-		const attachments = fileInput && fileInput.files ? Array.from(fileInput.files) : []
-		const targetEmail = form.dataset.contactMail || 'kontakt@lisieckidev.pl'
-		const mailSubject = subject || `Zapytanie ze strony od ${name}`
-		const bodyLines = [`Imię / firma: ${name}`, `Email: ${email}`, '', 'Wiadomość:', message]
 
-		if (attachments.length > 0) {
-			bodyLines.push(
-				'',
-				'Pliki wybrane w formularzu:',
-				...attachments.map(file => `- ${file.name}`),
-				'',
-				'Uwaga: formularz otwiera klienta poczty. Dołącz wybrane pliki w wiadomości email.',
-			)
+		setSubmittingState(true)
+		setStatus('Wysyłanie wiadomości...', 'pending')
+
+		try {
+			const response = await fetch(endpoint, {
+				method: 'POST',
+				body: formData,
+				headers: {
+					Accept: 'application/json',
+				},
+			})
+
+			const result = await response.json().catch(() => null)
+
+			if (!response.ok || !result || result.ok !== true) {
+				throw new Error(result && result.message ? result.message : 'Nie udało się wysłać wiadomości.')
+			}
+
+			form.reset()
+
+			if (fileLabel) {
+				fileLabel.textContent = defaultFileLabel
+			}
+
+			setStatus(result.message || 'Wiadomość została wysłana.', 'success')
+		} catch (error) {
+			const fallbackMessage = 'Nie udało się wysłać wiadomości. Spróbuj ponownie za chwilę.'
+			const message = error instanceof Error && error.message ? error.message : fallbackMessage
+			setStatus(message, 'error')
+		} finally {
+			setSubmittingState(false)
 		}
-
-		window.location.href = `mailto:${targetEmail}?subject=${encodeURIComponent(mailSubject)}&body=${encodeURIComponent(
-			bodyLines.join('\n'),
-		)}`
 	})
 }
 
@@ -1508,6 +1604,7 @@ function initThemeSwitcherLatest() {
 
 		currentTheme = theme.id
 		themeRequestId = requestId
+		page.dataset.pageTheme = theme.id
 		toggle.dataset.theme = theme.id
 		toggle.style.setProperty('--theme-switcher-accent', theme.accent)
 		toggle.setAttribute('aria-label', `Zmien wariant tla strony. Aktualnie: ${theme.label}`)
@@ -1524,7 +1621,6 @@ function initThemeSwitcherLatest() {
 			}
 
 			const backgroundValue = `url("${imageUrl}")`
-			page.dataset.pageTheme = theme.id
 			page.style.setProperty('--page-bg-image', backgroundValue)
 			page.style.backgroundImage = backgroundValue
 			clearLayerTransition()

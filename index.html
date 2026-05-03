@@ -15,7 +15,7 @@
             "@type": "Person",
             "name": "Arkadiusz Lisiecki",
             "jobTitle": "Front-end Developer",
-            "email": "mailto:kontakt@lisieckidev.pl",
+            "email": "mailto:kontakt@arkadiuszlisiecki.pl",
             "telephone": "+48 791 947 493",
             "sameAs": [
                 "https://github.com/Straffix"
@@ -501,7 +501,7 @@
                     <img class="stack-panel__header-icon" src="img/icons/stack.svg" alt="" aria-hidden="true">
                     <h2 class="tile-panel__title" id="stack-panel-title">Moje umiejętności</h2>
                 </div>
-                <div class="stack-panel__matrix-wrap">
+                <div class="stack-panel__matrix-wrap" data-panel-scroll-root>
                     <div class="stack-panel__matrix" aria-label="Stack technologiczny">
                         <p class="stack-panel__category">Front-end</p>
                         <article class="stack-panel__item" style="--stack-accent: #ff8a4c;">
@@ -632,7 +632,7 @@
                     <h2 class="portfolio-title" id="portfolio-panel-title">Portfolio</h2>
                 </header>
 
-                <div class="portfolio-list">
+                <div class="portfolio-list" data-panel-scroll-root>
                     <article class="portfolio-work" id="portfolio-dashboardit">
                         <div class="portfolio-work__copy">
                             <p class="portfolio-work__meta">01 / Dashboard SaaS</p>
@@ -1017,7 +1017,7 @@
                     <h2 class="about-title" id="about-panel-title">O mnie</h2>
                 </header>
 
-                <div class="about-panel__body">
+                <div class="about-panel__body" data-panel-scroll-root>
                     <section class="about-hero" aria-label="Kim jestem">
                         <div class="about-hero__copy">
                             <p class="about-kicker">Cześć! Nazywam się Arkadiusz Lisiecki.</p>
@@ -1158,7 +1158,7 @@
                 <p class="tile-panel__tile-label">Kontakt</p>
             </div>
 
-            <div class="tile-panel__content tile-panel__content--contact">
+            <div class="tile-panel__content tile-panel__content--contact" data-panel-scroll-root>
                 <header class="tile-panel__contact-header">
                     <div class="tile-panel__heading">
                         <img class="tile-panel__heading-icon" src="img/icons/contact.svg" alt="" aria-hidden="true">
@@ -1169,7 +1169,7 @@
                 <div class="contact-layout">
                     <aside class="contact-back" aria-label="Dane kontaktowe i social media">
                         <div class="contact-back__cards">
-                            <a class="contact-back__card" href="mailto:kontakt@lisieckidev.pl">
+                            <a class="contact-back__card" href="mailto:kontakt@arkadiuszlisiecki.pl">
                                 <span class="contact-back__card-icon" aria-hidden="true">
                                     <svg viewBox="0 0 24 24" focusable="false">
                                         <use href="#icon-mail"></use>
@@ -1177,7 +1177,7 @@
                                 </span>
                                 <span class="contact-back__card-copy">
                                     <span class="contact-back__card-label">Email</span>
-                                    <span class="contact-back__card-value">kontakt@lisieckidev.pl</span>
+                                    <span class="contact-back__card-value">kontakt@arkadiuszlisiecki.pl</span>
                                 </span>
                             </a>
 
@@ -1197,15 +1197,17 @@
                         <div class="contact-back__socials" aria-label="Social media">
                             <a class="contact-back__social-link" href="https://github.com/Straffix" target="_blank"
                                 rel="noreferrer">GitHub</a>
-                            <span
-                                class="contact-back__social-link contact-back__social-link--placeholder">Instagram</span>
-                            <span
-                                class="contact-back__social-link contact-back__social-link--placeholder">Facebook</span>
-                            <span class="contact-back__social-link contact-back__social-link--placeholder">X</span>
+                            <a class="contact-back__social-link" href="https://www.instagram.com/arkadiusz.el/" target="_blank"
+                                rel="noreferrer">Instagram</a>
+                            <a class="contact-back__social-link" href="https://www.facebook.com/lisiecki.arkadiusz"
+                                target="_blank" rel="noreferrer">Facebook</a>
+                            <a class="contact-back__social-link" href="https://x.com/lisiecki_dev" target="_blank"
+                                rel="noreferrer">X</a>
                         </div>
                     </aside>
 
-                    <form class="contact-form" data-contact-form data-contact-mail="kontakt@lisieckidev.pl">
+                    <form class="contact-form" data-contact-form data-contact-mail="kontakt@arkadiuszlisiecki.pl"
+                        action="send-email.php" method="post" enctype="multipart/form-data">
                         <div class="contact-form__row">
                             <label class="contact-form__field">
                                 <span class="contact-form__label">Imię / Firma</span>
@@ -1231,6 +1233,13 @@
                                 required data-contact-focus></textarea>
                         </label>
 
+                        <div class="contact-form__trap" aria-hidden="true">
+                            <label>
+                                <span>Nie wypełniaj tego pola</span>
+                                <input type="text" name="company_website" tabindex="-1" autocomplete="off">
+                            </label>
+                        </div>
+
                         <label class="contact-form__file">
                             <span class="contact-form__file-box">
                                 <span class="contact-form__file-copy">
@@ -1238,7 +1247,7 @@
                                         focusable="false">
                                         <use href="#icon-paperclip"></use>
                                     </svg>
-                                    <span data-file-label>Dołącz plik</span>
+                                    <span data-file-label>Dołącz grafiki, brief albo projekt</span>
                                 </span>
                                 <input type="file" name="attachments" multiple
                                     accept="image/*,.pdf,.zip,.fig,.psd,.ai,.xd,.sketch">
@@ -1260,6 +1269,7 @@
                                     <use href="#icon-arrow-up-right"></use>
                                 </svg>
                             </button>
+                            <p class="contact-form__status" data-contact-status aria-live="polite" hidden></p>
                         </div>
                     </form>
                 </div>
