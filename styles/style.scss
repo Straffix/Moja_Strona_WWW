@@ -1202,6 +1202,8 @@ a {
 	overflow: hidden;
 	border-radius: var(--screen-radius, 0);
 	background: var(--screen-bg, rgba(colors.$black, 0.82));
+	box-shadow: var(--screen-shadow, none);
+	isolation: isolate;
 	-webkit-clip-path: polygon(
 		var(--screen-clip-tl, 0% 0%),
 		var(--screen-clip-tr, 100% 0%),
@@ -1217,6 +1219,16 @@ a {
 	transform: translate3d(var(--screen-offset-x, 0), var(--screen-offset-y, 0), 0) rotate(var(--screen-rotate, 0deg))
 		skew(var(--screen-skew-x, 0deg), var(--screen-skew-y, 0deg));
 	transform-origin: var(--screen-origin, 50% 50%);
+}
+
+.project-demo__screen::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: 1;
+	border-radius: inherit;
+	background: var(--screen-overlay, none);
+	pointer-events: none;
 }
 
 .project-demo__frame--main {
@@ -1265,7 +1277,17 @@ a {
 	--screen-clip-tr: 100% 0%;
 	--screen-clip-br: 100% 100%;
 	--screen-clip-bl: 0% 100%;
-	--content-fit: cover;
+	--screen-bg: linear-gradient(
+		180deg,
+		rgba(colors.$white, 0.985) 0%,
+		rgba(colors.$white, 0.935) 74%,
+		rgba(colors.$gold-soft, 0.18) 100%
+	);
+	--screen-shadow: inset 0 0 0 1px rgba(colors.$black, 0.04);
+	--screen-overlay: linear-gradient(180deg, rgba(colors.$white, 0.22) 0%, transparent 38%);
+	--backdrop-blur: 1.1rem;
+	--backdrop-scale: 1.12;
+	--content-fit: contain;
 	--content-position: 50% 50%;
 	--content-x: 0%;
 	--content-y: 0%;
@@ -1299,7 +1321,17 @@ a {
 	--screen-skew-x: -6deg;
 	--screen-skew-y: 0deg;
 	--screen-origin: 50% 50%;
-	--content-fit: cover;
+	--screen-bg: linear-gradient(
+		180deg,
+		rgba(colors.$white, 0.99) 0%,
+		rgba(colors.$white, 0.95) 64%,
+		rgba(colors.$gold-soft, 0.2) 100%
+	);
+	--screen-shadow: inset 0 0 0 1px rgba(colors.$black, 0.05);
+	--screen-overlay: linear-gradient(180deg, rgba(colors.$white, 0.24) 0%, transparent 34%);
+	--backdrop-blur: 1.3rem;
+	--backdrop-scale: 1.18;
+	--content-fit: contain;
 	--content-position: 50% 50%;
 	--content-x: 0%;
 	--content-y: 0%;
@@ -1314,6 +1346,7 @@ a {
 .project-demo__image {
 	position: absolute;
 	inset: 0;
+	z-index: 2;
 	display: block;
 	width: 100%;
 	height: 100%;
@@ -1323,6 +1356,21 @@ a {
 		scaleY(var(--content-scale-y, 1)) rotate(var(--content-rotate, 0deg))
 		skew(var(--content-skew-x, 0deg), var(--content-skew-y, 0deg));
 	transform-origin: var(--content-origin, 50% 50%);
+}
+
+.project-demo__image--backdrop {
+	z-index: 0;
+	object-fit: cover;
+	object-position: 50% 50%;
+	filter: blur(var(--backdrop-blur, 1.2rem)) saturate(1.08);
+	transform: scale(var(--backdrop-scale, 1.14));
+	opacity: 0.82;
+}
+
+.project-demo__image--foreground {
+	z-index: 2;
+	object-fit: contain;
+	object-position: 50% 50%;
 }
 
 .project-slide--designin .project-demo__frame--main {
@@ -1513,6 +1561,12 @@ a {
 	--tile-panel-height: 100vh;
 	--tile-panel-open-height: 100svh;
 	--panel-section-top-margin: clamp(9rem, 15vh, 15rem); // górny odstęp paneli, używaj px/rem/vh zamiast %
+	--panel-reveal-base-delay: 0.56s;
+	--panel-reveal-group-step: 92ms;
+	--panel-reveal-phase-step: 64ms;
+	--panel-reveal-shift: 1.35rem;
+	--panel-reveal-scale: 0.985;
+	--panel-reveal-blur: 0.46rem;
 	--tile-panel-bg-start: #{rgba(colors.$white, 0.34)};
 	--tile-panel-bg-active: #{rgba(colors.$white, 0.98)};
 	position: fixed;
@@ -1725,6 +1779,61 @@ a {
 	transition-delay: 0s;
 }
 
+[data-panel-reveal] {
+	opacity: 0;
+	filter: blur(var(--panel-reveal-blur));
+	transform: translate3d(0, var(--panel-reveal-shift), 0) scale(var(--panel-reveal-scale));
+	transform-origin: 50% 50%;
+	will-change: opacity, transform, filter;
+	transition:
+		opacity 0.52s cubic-bezier(0.22, 1, 0.36, 1),
+		transform 0.68s cubic-bezier(0.22, 1, 0.36, 1),
+		filter 0.52s cubic-bezier(0.22, 1, 0.36, 1);
+	transition-delay: 0s;
+}
+
+.tile-panel.is-open [data-panel-reveal] {
+	opacity: 1;
+	filter: blur(0);
+	transform: translate3d(0, 0, 0) scale(1);
+	transition-delay: calc(
+		var(--panel-reveal-base-delay) + (var(--panel-reveal-group, 0) * var(--panel-reveal-group-step)) +
+			(var(--panel-reveal-phase, 0) * var(--panel-reveal-phase-step))
+	);
+}
+
+.tile-panel.is-visible:not(.is-open) [data-panel-reveal],
+.tile-panel.is-closing [data-panel-reveal] {
+	opacity: 0;
+	filter: blur(var(--panel-reveal-blur));
+	transform: translate3d(0, calc(var(--panel-reveal-shift) * 0.72), 0) scale(var(--panel-reveal-scale));
+	transition-delay: 0s;
+}
+
+[data-panel-reveal-type='tag-list'] {
+	--panel-reveal-shift: 1rem;
+	--panel-reveal-scale: 0.992;
+	--panel-reveal-blur: 0.22rem;
+}
+
+[data-panel-reveal-type='cta'] {
+	--panel-reveal-shift: 1.05rem;
+	--panel-reveal-scale: 0.99;
+	--panel-reveal-blur: 0.22rem;
+}
+
+[data-panel-reveal-type='media'] {
+	--panel-reveal-shift: 2rem;
+	--panel-reveal-scale: 0.972;
+	--panel-reveal-blur: 0.58rem;
+}
+
+[data-panel-reveal-type='card'] {
+	--panel-reveal-shift: 1.55rem;
+	--panel-reveal-scale: 0.98;
+	--panel-reveal-blur: 0.34rem;
+}
+
 .tile-panel__icon {
 	width: clamp(4.6rem, 6vw, 7.2rem);
 	height: auto;
@@ -1774,6 +1883,12 @@ a {
 	--portfolio-panel-header-gap: clamp(1rem, 1.6vw, 1.4rem);
 	--portfolio-panel-header-icon-size: clamp(3.6rem, 4vw, 5rem);
 	--portfolio-panel-title-size: clamp(2.8rem, 3.4vw, 4.6rem);
+	--panel-reveal-group-step: 78ms;
+	--panel-reveal-phase-step: 58ms;
+	--portfolio-scroll-shift-below: clamp(4.8rem, 7vw, 7rem);
+	--portfolio-scroll-shift-above: clamp(2.2rem, 3vw, 3.2rem);
+	--portfolio-scroll-scale-hidden: 0.974;
+	--portfolio-scroll-blur-hidden: 0.62rem;
 	background-image: none;
 }
 
@@ -1873,6 +1988,39 @@ a {
 	margin: 0 auto;
 	padding: clamp(3rem, 6vw, 6rem) clamp(1.4rem, 3vw, 3.2rem);
 	border-bottom: 1px solid var(--page-accent-focus-border);
+}
+
+.portfolio-list[data-portfolio-scroll='active'] .portfolio-work {
+	opacity: 0;
+	filter: blur(var(--portfolio-scroll-blur-hidden));
+	transform: translate3d(0, var(--portfolio-scroll-shift-below), 0) scale(var(--portfolio-scroll-scale-hidden));
+	transform-origin: 50% 50%;
+	will-change: opacity, transform, filter;
+}
+
+.portfolio-list[data-portfolio-scroll='active'].is-scroll-motion-ready .portfolio-work {
+	transition:
+		opacity 0.78s cubic-bezier(0.18, 1, 0.3, 1),
+		transform 1.08s cubic-bezier(0.18, 1, 0.3, 1),
+		filter 0.84s cubic-bezier(0.18, 1, 0.3, 1);
+}
+
+.portfolio-list[data-portfolio-scroll='active'] .portfolio-work[data-portfolio-scroll-state='visible'] {
+	opacity: 1;
+	filter: blur(0);
+	transform: translate3d(0, 0, 0) scale(1);
+}
+
+.portfolio-list[data-portfolio-scroll='active'] .portfolio-work[data-portfolio-scroll-state='above'] {
+	opacity: 0;
+	filter: blur(calc(var(--portfolio-scroll-blur-hidden) * 0.72));
+	transform: translate3d(0, calc(var(--portfolio-scroll-shift-above) * -1), 0) scale(0.984);
+}
+
+.portfolio-list[data-portfolio-scroll='active'] .portfolio-work[data-portfolio-scroll-state='below'] {
+	opacity: 0;
+	filter: blur(var(--portfolio-scroll-blur-hidden));
+	transform: translate3d(0, var(--portfolio-scroll-shift-below), 0) scale(var(--portfolio-scroll-scale-hidden));
 }
 
 .portfolio-work--reverse {
@@ -2233,6 +2381,8 @@ a {
 	--about-panel-header-gap: clamp(1rem, 1.6vw, 1.4rem);
 	--about-panel-header-icon-size: clamp(3.6rem, 4vw, 5rem);
 	--about-panel-title-size: clamp(2.8rem, 3.4vw, 4.6rem);
+	--panel-reveal-group-step: 86ms;
+	--panel-reveal-phase-step: 60ms;
 	background-image: none;
 }
 
@@ -2430,7 +2580,11 @@ a {
 
 @media (prefers-reduced-motion: no-preference) {
 	#about-panel.tile-panel.is-open .about-portrait img {
-		animation: aboutPortraitReveal 0.85s ease 0.12s both;
+		animation: aboutPortraitReveal 0.85s ease both;
+		animation-delay: calc(
+			var(--panel-reveal-base-delay) + (var(--panel-reveal-group, 0) * var(--panel-reveal-group-step)) +
+				(var(--panel-reveal-phase, 0) * var(--panel-reveal-phase-step)) + 90ms
+		);
 	}
 }
 
@@ -2769,6 +2923,8 @@ a {
 	--contact-panel-header-gap: clamp(1rem, 1.6vw, 1.4rem);
 	--contact-panel-header-icon-size: clamp(3.6rem, 4vw, 5rem);
 	--contact-panel-title-size: clamp(2.8rem, 3.4vw, 4.6rem);
+	--panel-reveal-group-step: 88ms;
+	--panel-reveal-phase-step: 60ms;
 	background-image: none;
 }
 
@@ -3883,6 +4039,9 @@ a {
 	--stack-panel-header-gap: clamp(1rem, 1.6vw, 1.4rem);
 	--stack-panel-header-icon-size: clamp(3.6rem, 4vw, 5rem);
 	--stack-panel-title-size: clamp(2.8rem, 3.4vw, 4.6rem);
+	--panel-reveal-base-delay: 0.52s;
+	--panel-reveal-group-step: 56ms;
+	--panel-reveal-phase-step: 42ms;
 	--stack-panel-grid-gap: clamp(0.24rem, 0.35vw, 0.4rem);
 	--stack-panel-category-font-size: clamp(1.45rem, 1.4vw, 1.8rem);
 	--stack-panel-category-padding-y: clamp(1.2rem, 1.5vw, 2rem);

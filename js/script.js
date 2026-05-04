@@ -5,8 +5,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	initTaglineRotator()
 	initSiteIntro()
+	enhanceProjectMockups()
 	initProjectSliders()
 	initExpandingPanels()
+	initPortfolioScrollReveal()
 	initContactPanel()
 	initThemeSwitcherLatest()
 
@@ -21,6 +23,30 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	initNetworkCanvas(backgroundScene)
 })
+
+function enhanceProjectMockups(root = document) {
+	const screens = root.querySelectorAll('.project-demo__frame--top .project-demo__screen, .project-demo__frame--bottom .project-demo__screen')
+
+	for (const screen of screens) {
+		if (screen.querySelector('.project-demo__image--backdrop')) {
+			continue
+		}
+
+		const image = screen.querySelector('.project-demo__image')
+		if (!image) {
+			continue
+		}
+
+		image.classList.add('project-demo__image--foreground')
+
+		const backdrop = image.cloneNode(true)
+		backdrop.classList.remove('project-demo__image--foreground')
+		backdrop.classList.add('project-demo__image--backdrop')
+		backdrop.setAttribute('aria-hidden', 'true')
+		backdrop.alt = ''
+		screen.insertBefore(backdrop, image)
+	}
+}
 
 function initTaglineRotator() {
 	const tagline = document.querySelector('[data-tagline-rotator]')
@@ -795,6 +821,320 @@ function initExpandingPanels() {
 	}
 }
 
+function registerPanelReveal(target, { group = 0, phase = 0, type = '' } = {}) {
+	if (!target) {
+		return
+	}
+
+	target.setAttribute('data-panel-reveal', '')
+	target.style.setProperty('--panel-reveal-group', `${group}`)
+	target.style.setProperty('--panel-reveal-phase', `${phase}`)
+
+	if (type) {
+		target.dataset.panelRevealType = type
+	}
+}
+
+function setupPanelReveal(panel) {
+	if (!panel || panel.dataset.panelRevealReady === 'true') {
+		return
+	}
+
+	if (panel.id === 'portfolio-panel') {
+		registerPanelReveal(panel.querySelector('.portfolio-panel__header'))
+
+		panel.querySelectorAll('.portfolio-work').forEach((work, index) => {
+			const group = 1 + index * 0.82
+			registerPanelReveal(work.querySelector('.portfolio-work__meta'), { group, phase: 0 })
+			registerPanelReveal(work.querySelector('.portfolio-work__copy h3'), { group, phase: 1 })
+			registerPanelReveal(work.querySelector('.portfolio-work__copy > p:not(.portfolio-work__meta)'), {
+				group,
+				phase: 2,
+			})
+			registerPanelReveal(work.querySelector('.portfolio-work__tags'), {
+				group,
+				phase: 3,
+				type: 'tag-list',
+			})
+			registerPanelReveal(work.querySelector('.portfolio-work__link'), { group, phase: 4, type: 'cta' })
+			registerPanelReveal(work.querySelector('.portfolio-work__media'), { group, phase: 5, type: 'media' })
+		})
+	}
+
+	if (panel.id === 'about-panel') {
+		registerPanelReveal(panel.querySelector('.about-panel__header'))
+
+		const heroCopy = panel.querySelector('.about-hero__copy')
+		registerPanelReveal(heroCopy?.querySelector('.about-kicker'), { group: 1, phase: 0 })
+		registerPanelReveal(heroCopy?.querySelector('h3'), { group: 1, phase: 1 })
+		registerPanelReveal(heroCopy?.querySelector('p:not(.about-kicker)'), { group: 1, phase: 2 })
+		registerPanelReveal(heroCopy?.querySelector('.about-tags'), { group: 1, phase: 3, type: 'tag-list' })
+		registerPanelReveal(panel.querySelector('.about-portrait'), { group: 1, phase: 4, type: 'media' })
+
+		panel.querySelectorAll('.about-story .about-card').forEach((card, index) => {
+			registerPanelReveal(card, { group: 2 + index * 0.72, type: 'card' })
+		})
+
+		const hobbyIntro = panel.querySelector('.about-hobby__intro')
+		registerPanelReveal(hobbyIntro?.querySelector('.about-card__meta'), { group: 4.5, phase: 0 })
+		registerPanelReveal(hobbyIntro?.querySelector('h3'), { group: 4.5, phase: 1 })
+		registerPanelReveal(hobbyIntro?.querySelector('p:not(.about-card__meta)'), { group: 4.5, phase: 2 })
+		registerPanelReveal(hobbyIntro?.querySelector('.about-hobby__intro-icon'), {
+			group: 4.5,
+			phase: 3,
+			type: 'media',
+		})
+
+		panel.querySelectorAll('.about-hobby__grid .about-hobby__item').forEach((item, index) => {
+			registerPanelReveal(item, { group: 5.6 + index * 0.48, type: 'card' })
+		})
+	}
+
+	if (panel.id === 'contact-panel') {
+		registerPanelReveal(panel.querySelector('.tile-panel__contact-header'))
+		registerPanelReveal(panel.querySelector('.contact-back'), { group: 1, type: 'card' })
+		registerPanelReveal(panel.querySelector('.contact-back__cards'), { group: 1, phase: 1 })
+		registerPanelReveal(panel.querySelector('.contact-back__socials'), { group: 1, phase: 2 })
+		registerPanelReveal(panel.querySelector('.contact-form'), { group: 2, type: 'card' })
+		registerPanelReveal(panel.querySelector('.contact-form__row'), { group: 2, phase: 1 })
+		registerPanelReveal(panel.querySelector('.contact-form__row + .contact-form__field'), {
+			group: 2,
+			phase: 2,
+		})
+		registerPanelReveal(panel.querySelector('.contact-form__field--message'), { group: 2, phase: 3 })
+		registerPanelReveal(panel.querySelector('.contact-form__file'), { group: 2, phase: 4 })
+		registerPanelReveal(panel.querySelector('.contact-check'), { group: 2, phase: 5 })
+		registerPanelReveal(panel.querySelector('.contact-form__actions'), { group: 2, phase: 6, type: 'cta' })
+	}
+
+	if (panel.id === 'stack-panel') {
+		registerPanelReveal(panel.querySelector('.stack-panel__header'))
+
+		panel.querySelectorAll('.stack-panel__matrix > *').forEach((item, index) => {
+			const type = item.classList.contains('stack-panel__item') ? 'card' : ''
+			registerPanelReveal(item, { group: 1 + index * 0.18, type })
+		})
+	}
+
+	panel.dataset.panelRevealReady = 'true'
+}
+
+function initPortfolioScrollReveal() {
+	const panel = document.getElementById('portfolio-panel')
+	const scrollRoot = panel?.querySelector('.portfolio-list[data-panel-scroll-root]')
+	if (!panel || !scrollRoot) {
+		return
+	}
+
+	const items = Array.from(scrollRoot.querySelectorAll('.portfolio-work'))
+	if (!items.length) {
+		return
+	}
+
+	const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+	let syncFrameId = 0
+	let motionReadyFrameId = 0
+	let openSyncFrameId = 0
+
+	for (const item of items) {
+		item.setAttribute('data-portfolio-scroll-item', '')
+	}
+
+	const isPanelMotionReady = () => !panel.hidden && panel.classList.contains('is-open') && scrollRoot.clientHeight > 0
+
+	const clearSyncFrame = () => {
+		if (!syncFrameId) {
+			return
+		}
+
+		window.cancelAnimationFrame(syncFrameId)
+		syncFrameId = 0
+	}
+
+	const clearMotionReadyFrame = () => {
+		if (!motionReadyFrameId) {
+			return
+		}
+
+		window.cancelAnimationFrame(motionReadyFrameId)
+		motionReadyFrameId = 0
+	}
+
+	const clearOpenSyncFrame = () => {
+		if (!openSyncFrameId) {
+			return
+		}
+
+		window.cancelAnimationFrame(openSyncFrameId)
+		openSyncFrameId = 0
+	}
+
+	const showAllItems = () => {
+		scrollRoot.removeAttribute('data-portfolio-scroll')
+		scrollRoot.classList.remove('is-scroll-motion-ready')
+
+		for (const item of items) {
+			item.dataset.portfolioScrollState = 'visible'
+		}
+	}
+
+	const syncItemStates = ({ armMotion = false } = {}) => {
+		clearSyncFrame()
+
+		if (reduceMotionQuery.matches || !isPanelMotionReady()) {
+			showAllItems()
+			return
+		}
+
+		scrollRoot.dataset.portfolioScroll = 'active'
+
+		const rootRect = scrollRoot.getBoundingClientRect()
+		const revealTop = rootRect.top + rootRect.height * 0.14
+		const revealBottom = rootRect.bottom - rootRect.height * 0.08
+
+		for (const item of items) {
+			const rect = item.getBoundingClientRect()
+			const nextState =
+				rect.bottom <= revealTop ? 'above' : rect.top >= revealBottom ? 'below' : 'visible'
+
+			item.dataset.portfolioScrollState = nextState
+		}
+
+		if (!armMotion) {
+			return
+		}
+
+		clearMotionReadyFrame()
+		motionReadyFrameId = window.requestAnimationFrame(() => {
+			motionReadyFrameId = 0
+
+			if (!reduceMotionQuery.matches && isPanelMotionReady()) {
+				scrollRoot.classList.add('is-scroll-motion-ready')
+			}
+		})
+	}
+
+	const scheduleOpenSync = () => {
+		clearSyncFrame()
+		clearMotionReadyFrame()
+		clearOpenSyncFrame()
+		showAllItems()
+
+		let attempts = 0
+		let readyFrames = 0
+
+		const step = () => {
+			attempts += 1
+
+			if (reduceMotionQuery.matches || panel.hidden) {
+				openSyncFrameId = 0
+				showAllItems()
+				return
+			}
+
+			readyFrames = isPanelMotionReady() ? readyFrames + 1 : 0
+
+			if (readyFrames >= 2 || attempts >= 20) {
+				openSyncFrameId = 0
+				syncItemStates({ armMotion: true })
+				return
+			}
+
+			openSyncFrameId = window.requestAnimationFrame(step)
+		}
+
+		openSyncFrameId = window.requestAnimationFrame(step)
+	}
+
+	const scheduleSync = (options = {}) => {
+		if (options.armMotion) {
+			scheduleOpenSync()
+			return
+		}
+
+		if (syncFrameId) {
+			return
+		}
+
+		syncFrameId = window.requestAnimationFrame(() => {
+			syncFrameId = 0
+			syncItemStates()
+		})
+	}
+
+	panel.addEventListener('tilepanel:open', () => {
+		clearSyncFrame()
+		clearMotionReadyFrame()
+		clearOpenSyncFrame()
+		showAllItems()
+
+		window.requestAnimationFrame(() => {
+			if (reduceMotionQuery.matches || isPanelMotionReady()) {
+				scheduleOpenSync()
+			}
+		})
+	})
+
+	panel.addEventListener('tilepanel:closed', () => {
+		clearSyncFrame()
+		clearMotionReadyFrame()
+		clearOpenSyncFrame()
+		showAllItems()
+	})
+
+	panel.addEventListener('transitionend', event => {
+		if (event.target !== panel || !panel.classList.contains('is-open')) {
+			return
+		}
+
+		if (event.propertyName !== 'width' && event.propertyName !== 'height') {
+			return
+		}
+
+		scheduleOpenSync()
+	})
+
+	scrollRoot.addEventListener(
+		'scroll',
+		() => {
+			if (reduceMotionQuery.matches || !isPanelMotionReady()) {
+				return
+			}
+
+			scheduleSync()
+		},
+		{ passive: true },
+	)
+
+	window.addEventListener('resize', () => {
+		scheduleSync()
+	})
+
+	addMediaQueryListener(reduceMotionQuery, () => {
+		if (reduceMotionQuery.matches) {
+			clearSyncFrame()
+			clearMotionReadyFrame()
+			clearOpenSyncFrame()
+			showAllItems()
+			return
+		}
+
+		scheduleOpenSync()
+	})
+
+	if (!panel.hidden) {
+		if (isPanelMotionReady()) {
+			scheduleOpenSync()
+			return
+		}
+
+		showAllItems()
+		return
+	}
+
+	showAllItems()
+}
+
 function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focusableSelector, historyApi) {
 	const instantPanelQuery = panel.id === 'contact-panel' ? window.matchMedia('(max-width: 640px)') : null
 	const panelScrollRoot = panel.querySelector('[data-panel-scroll-root]')
@@ -811,6 +1151,8 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 	let isHashFallbackActive = false
 	let swipeCloseDelta = 0
 	let swipeResetTimerId = 0
+
+	setupPanelReveal(panel)
 
 	const shouldSkipPanelMotion = () =>
 		reduceMotionQuery.matches || Boolean(instantPanelQuery && instantPanelQuery.matches)
