@@ -1023,11 +1023,75 @@ function initContactPanel() {
 		return
 	}
 
+	const panelScrollRoot = panel.querySelector('[data-panel-scroll-root]')
 	const focusField = panel.querySelector('[data-contact-focus]')
 	const form = panel.querySelector('[data-contact-form]')
 	const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 	const mobileContactQuery = window.matchMedia('(max-width: 640px)')
 	let focusTimerId = 0
+	let mobileFieldTimerId = 0
+	let activeMobileField = null
+
+	const isPanelActive = () => !panel.hidden && (panel.classList.contains('is-open') || panel.classList.contains('is-visible'))
+
+	const clearMobileFieldTimer = () => {
+		if (!mobileFieldTimerId) {
+			return
+		}
+
+		window.clearTimeout(mobileFieldTimerId)
+		mobileFieldTimerId = 0
+	}
+
+	const resetMobileViewportMetrics = () => {
+		panel.style.removeProperty('--tile-panel-open-height')
+		panel.style.removeProperty('--contact-panel-keyboard-offset')
+	}
+
+	const syncMobileViewportMetrics = () => {
+		if (!mobileContactQuery.matches || !isPanelActive()) {
+			resetMobileViewportMetrics()
+			return
+		}
+
+		const viewport = window.visualViewport
+		const viewportHeight = Math.max(Math.round(viewport ? viewport.height : window.innerHeight), 0)
+		const viewportOffsetTop = viewport ? viewport.offsetTop : 0
+		const keyboardOffset = Math.max(Math.round(window.innerHeight - viewportHeight - viewportOffsetTop), 0)
+
+		if (viewportHeight) {
+			panel.style.setProperty('--tile-panel-open-height', `${viewportHeight}px`)
+		}
+
+		panel.style.setProperty('--contact-panel-keyboard-offset', `${keyboardOffset}px`)
+	}
+
+	const scrollMobileFieldIntoView = field => {
+		if (!field || !panelScrollRoot || !isPanelActive()) {
+			return
+		}
+
+		field.scrollIntoView({
+			block: 'center',
+			inline: 'nearest',
+			behavior: 'auto',
+		})
+	}
+
+	const scheduleMobileFieldSync = field => {
+		clearMobileFieldTimer()
+		activeMobileField = field
+
+		if (!mobileContactQuery.matches || !isPanelActive()) {
+			return
+		}
+
+		mobileFieldTimerId = window.setTimeout(() => {
+			syncMobileViewportMetrics()
+			scrollMobileFieldIntoView(field)
+			mobileFieldTimerId = 0
+		}, 260)
+	}
 
 	const focusContactField = () => {
 		window.clearTimeout(focusTimerId)
@@ -1043,9 +1107,17 @@ function initContactPanel() {
 	}
 
 	panel.addEventListener('tilepanel:open', focusContactField)
+	panel.addEventListener('tilepanel:open', () => {
+		window.requestAnimationFrame(() => {
+			syncMobileViewportMetrics()
+		})
+	})
 
 	panel.addEventListener('tilepanel:closed', () => {
 		window.clearTimeout(focusTimerId)
+		clearMobileFieldTimer()
+		activeMobileField = null
+		resetMobileViewportMetrics()
 	})
 
 	if (!form) {
@@ -1097,6 +1169,60 @@ function initContactPanel() {
 			const count = fileInput.files ? fileInput.files.length : 0
 			fileLabel.textContent = count === 0 ? defaultFileLabel : `Wybrane pliki: ${count}`
 		})
+	}
+
+	form.addEventListener('focusin', event => {
+		const field =
+			event.target instanceof HTMLElement ? event.target.closest('input, textarea, select') : null
+		if (!field || !mobileContactQuery.matches) {
+			return
+		}
+
+		scheduleMobileFieldSync(field)
+	})
+
+	form.addEventListener('focusout', () => {
+		window.setTimeout(() => {
+			const activeElement = document.activeElement
+			if (!(activeElement instanceof HTMLElement) || !form.contains(activeElement)) {
+				activeMobileField = null
+			}
+		}, 0)
+	})
+
+	addMediaQueryListener(mobileContactQuery, () => {
+		if (mobileContactQuery.matches) {
+			syncMobileViewportMetrics()
+			return
+		}
+
+		clearMobileFieldTimer()
+		activeMobileField = null
+		resetMobileViewportMetrics()
+	})
+
+	if (window.visualViewport) {
+		const handleVisualViewportChange = () => {
+			if (!mobileContactQuery.matches || !isPanelActive()) {
+				return
+			}
+
+			syncMobileViewportMetrics()
+
+			const activeElement = document.activeElement
+			if (!(activeElement instanceof HTMLElement) || !form.contains(activeElement)) {
+				return
+			}
+
+			if (!activeElement.matches('input, textarea, select')) {
+				return
+			}
+
+			scheduleMobileFieldSync(activeElement)
+		}
+
+		window.visualViewport.addEventListener('resize', handleVisualViewportChange)
+		window.visualViewport.addEventListener('scroll', handleVisualViewportChange)
 	}
 
 	form.addEventListener('submit', async event => {
@@ -1549,6 +1675,8 @@ function initThemeSwitcherLatest() {
 		return
 	}
 
+	const themeColorMeta =
+		document.querySelector('meta[data-theme-color]') || document.querySelector('meta[name="theme-color"]')
 	const backgroundScene = page.querySelector('.background')
 	const baseLayer = document.createElement('div')
 	const incomingLayer = document.createElement('div')
@@ -1607,6 +1735,7 @@ function initThemeSwitcherLatest() {
 		page.dataset.pageTheme = theme.id
 		toggle.dataset.theme = theme.id
 		toggle.style.setProperty('--theme-switcher-accent', theme.accent)
+		syncBrowserThemeColor(theme)
 		toggle.setAttribute('aria-label', `Zmien wariant tla strony. Aktualnie: ${theme.label}`)
 		toggle.setAttribute('title', `Tlo: ${theme.label}. Kliknij, aby przelaczyc.`)
 
@@ -1711,6 +1840,16 @@ function initThemeSwitcherLatest() {
 		return activeViewport ? activeViewport.size : viewportThemes[viewportThemes.length - 1].size
 	}
 
+	function syncBrowserThemeColor(theme) {
+		if (!themeColorMeta) {
+			return
+		}
+
+		const accentInk = window.getComputedStyle(page).getPropertyValue('--page-accent-ink').trim()
+		const parsedColor = parseColorToHex(accentInk)
+		themeColorMeta.setAttribute('content', parsedColor || theme.accent)
+	}
+
 	function storeTheme(themeId) {
 		try {
 			window.localStorage.setItem(storageKey, themeId)
@@ -1738,4 +1877,39 @@ function initThemeSwitcherLatest() {
 			return ''
 		}
 	}
+}
+
+function parseColorToHex(colorValue) {
+	if (!colorValue) {
+		return ''
+	}
+
+	const normalizedValue = colorValue.trim()
+	if (/^#[\da-f]{6}$/i.test(normalizedValue)) {
+		return normalizedValue
+	}
+
+	if (/^#[\da-f]{3}$/i.test(normalizedValue)) {
+		return `#${normalizedValue
+			.slice(1)
+			.split('')
+			.map(part => `${part}${part}`)
+			.join('')}`
+	}
+
+	const rgbMatch = normalizedValue.match(/^rgba?\(([^)]+)\)$/i)
+	if (!rgbMatch) {
+		return ''
+	}
+
+	const colorChannels = rgbMatch[1]
+		.split(',')
+		.slice(0, 3)
+		.map(channel => Number.parseInt(channel.trim(), 10))
+
+	if (colorChannels.length !== 3 || colorChannels.some(channel => Number.isNaN(channel))) {
+		return ''
+	}
+
+	return `#${colorChannels.map(channel => clamp(channel, 0, 255).toString(16).padStart(2, '0')).join('')}`
 }

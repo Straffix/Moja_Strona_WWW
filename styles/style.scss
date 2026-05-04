@@ -568,6 +568,7 @@ a {
 
 .theme-switcher {
 	--theme-switcher-accent: #b6628f;
+	color: var(--theme-switcher-accent);
 	position: relative;
 	display: inline-flex;
 	align-items: center;
@@ -602,11 +603,11 @@ a {
 }
 
 .theme-switcher__icon {
+	display: block;
+	flex: 0 0 auto;
 	width: 2rem;
 	height: 2rem;
-	background: var(--theme-switcher-accent);
-	-webkit-mask: url('../../img/icons/palette-solid-full.svg') center / contain no-repeat;
-	mask: url('../../img/icons/palette-solid-full.svg') center / contain no-repeat;
+	fill: currentColor;
 	filter: drop-shadow(0 0 0.45rem rgba(colors.$white, 0.12)) drop-shadow(0 0 0.2rem rgba(colors.$white, 0.08));
 }
 
@@ -1283,6 +1284,7 @@ a {
 	--tile-panel-y: 0px;
 	--tile-panel-width: 100vw;
 	--tile-panel-height: 100vh;
+	--tile-panel-open-height: 100svh;
 	--panel-section-top-margin: clamp(9rem, 15vh, 15rem); // górny odstęp paneli, używaj px/rem/vh zamiast %
 	--tile-panel-bg-start: #{rgba(colors.$white, 0.34)};
 	--tile-panel-bg-active: #{rgba(colors.$white, 0.98)};
@@ -1311,6 +1313,12 @@ a {
 		border-color 0.52s ease;
 }
 
+@supports (height: 100dvh) {
+	.tile-panel {
+		--tile-panel-open-height: 100dvh;
+	}
+}
+
 .tile-panel[hidden] {
 	display: none;
 }
@@ -1325,8 +1333,7 @@ a {
 	top: 0;
 	left: 0;
 	width: 100vw;
-	height: 100vh;
-	height: 100svh;
+	height: var(--tile-panel-open-height);
 	flex-direction: column;
 	justify-content: flex-start;
 	padding-top: 0;
@@ -2468,9 +2475,9 @@ a {
 	height: 100%;
 	max-height: 100%;
 	margin-top: 0;
-	overflow: auto;
-	overscroll-behavior: contain;
-	-webkit-overflow-scrolling: touch;
+	scroll-padding-top: max(1rem, calc(env(safe-area-inset-top) + 0.6rem));
+	scroll-padding-bottom: calc(var(--contact-panel-keyboard-offset, 0px) + max(1.8rem, calc(env(safe-area-inset-bottom) + 1.2rem)));
+	overflow: hidden;
 	padding: 0 clamp(1.6rem, 3vw, 3.2rem) clamp(1.2rem, 2vh, 1.8rem);
 	color: rgba(colors.$black, 0.94);
 	text-align: left;
@@ -2528,6 +2535,7 @@ a {
 
 #contact-panel .contact-layout {
 	display: grid;
+	flex: 1 1 auto;
 	grid-template-columns: minmax(0, 1fr);
 	grid-auto-rows: max-content;
 	gap: clamp(1.2rem, 1.8vw, 2rem);
@@ -2535,6 +2543,11 @@ a {
 	min-height: 0;
 	align-items: start;
 	margin: 0 auto;
+	overflow: auto;
+	overscroll-behavior: contain;
+	-webkit-overflow-scrolling: touch;
+	scroll-padding-top: max(1rem, calc(env(safe-area-inset-top) + 0.6rem));
+	scroll-padding-bottom: calc(var(--contact-panel-keyboard-offset, 0px) + max(1.8rem, calc(env(safe-area-inset-bottom) + 1.2rem)));
 }
 
 #contact-panel .contact-layout > * {
@@ -2793,6 +2806,8 @@ a {
 	display: block;
 	width: 100%;
 	max-width: 100%;
+	scroll-margin-top: 1rem;
+	scroll-margin-bottom: calc(var(--contact-panel-keyboard-offset, 0px) + 1.6rem);
 	padding: clamp(0.75rem, 1.1vw, 0.9rem) clamp(1rem, 1.4vw, 1.15rem);
 	border: 1px solid rgba(colors.$black, 0.18);
 	border-radius: 0;
@@ -3389,7 +3404,10 @@ a {
 	}
 
 	#contact-panel .contact-form__field input,
-	#contact-panel .contact-form__field textarea,
+	#contact-panel .contact-form__field textarea {
+		font-size: 1.6rem;
+	}
+
 	#contact-panel .contact-form__submit,
 	#contact-panel .contact-form__file-box {
 		font-size: 1.15rem;
@@ -4009,5 +4027,25 @@ a {
 @media (max-width: 640px) {
 	.project-slider {
 		--project-demo-lift: -0.9rem;
+	}
+
+	#portfolio-panel.tile-panel,
+	#about-panel.tile-panel,
+	#contact-panel.tile-panel,
+	#stack-panel.tile-panel {
+		--panel-section-top-margin: clamp(6rem, 8.5vh, 6.8rem);
+	}
+
+	#portfolio-panel [data-panel-scroll-root],
+	#about-panel [data-panel-scroll-root],
+	#contact-panel [data-panel-scroll-root],
+	#stack-panel [data-panel-scroll-root] {
+		--panel-top-fade-height: clamp(2.2rem, 5.5vw, 3.2rem);
+		-webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--panel-top-fade-height), #000 100%);
+		mask-image: linear-gradient(to bottom, transparent 0, #000 var(--panel-top-fade-height), #000 100%);
+		-webkit-mask-repeat: no-repeat;
+		mask-repeat: no-repeat;
+		-webkit-mask-size: 100% 100%;
+		mask-size: 100% 100%;
 	}
 }
