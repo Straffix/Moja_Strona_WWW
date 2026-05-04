@@ -458,6 +458,8 @@ function initSiteIntro() {
 		window.clearTimeout(fallbackTimerId)
 		window.clearTimeout(resizeTimerId)
 		window.removeEventListener('resize', scheduleMotionSync)
+		intro.classList.remove('is-flying')
+		intro.classList.remove('is-ready')
 		document.documentElement.classList.add('intro-complete')
 		intro.classList.add('is-done')
 
@@ -796,9 +798,15 @@ function initExpandingPanels() {
 function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focusableSelector, historyApi) {
 	const instantPanelQuery = panel.id === 'contact-panel' ? window.matchMedia('(max-width: 640px)') : null
 	const panelScrollRoot = panel.querySelector('[data-panel-scroll-root]')
+	const page = document.querySelector('.page')
+	const pageReturnRevealDelay = 220
+	const pageTileRevealCleanupDelay = 1040
 	let isOpen = false
 	let closeTimerId = 0
 	let focusTimerId = 0
+	let returnStateFrameId = 0
+	let returnStateTimeoutId = 0
+	let revealStateTimeoutId = 0
 	let shouldReturnFocusToTrigger = false
 	let isHashFallbackActive = false
 	let swipeCloseDelta = 0
@@ -821,6 +829,110 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 
 	const focusCloseButton = () => {
 		closeButton.focus({ preventScroll: true })
+	}
+
+	const clearPageReturnFrame = () => {
+		if (!returnStateFrameId) {
+			return
+		}
+
+		window.cancelAnimationFrame(returnStateFrameId)
+		returnStateFrameId = 0
+	}
+
+	const clearPageReturnTimeout = () => {
+		if (!returnStateTimeoutId) {
+			return
+		}
+
+		window.clearTimeout(returnStateTimeoutId)
+		returnStateTimeoutId = 0
+	}
+
+	const clearPageRevealTimeout = () => {
+		if (!revealStateTimeoutId) {
+			return
+		}
+
+		window.clearTimeout(revealStateTimeoutId)
+		revealStateTimeoutId = 0
+	}
+
+	const clearPagePanelOrigin = () => {
+		if (!page) {
+			return
+		}
+
+		for (const originTrigger of page.querySelectorAll('[data-expand-trigger].is-panel-origin')) {
+			originTrigger.classList.remove('is-panel-origin')
+		}
+	}
+
+	const activatePagePanelState = () => {
+		if (!page) {
+			return
+		}
+
+		clearPageReturnFrame()
+		clearPageReturnTimeout()
+		clearPageRevealTimeout()
+		page.classList.remove('is-panel-returning')
+		page.classList.remove('is-panel-revealing')
+		clearPagePanelOrigin()
+		trigger.classList.add('is-panel-origin')
+		page.classList.add('is-panel-active')
+		page.dataset.activePanel = panel.id
+	}
+
+	const beginPagePanelReturn = (skipMotion = false) => {
+		if (!page) {
+			return
+		}
+
+		clearPageReturnFrame()
+		clearPageReturnTimeout()
+		clearPageRevealTimeout()
+		page.classList.remove('is-panel-active')
+		page.classList.remove('is-panel-revealing')
+		page.removeAttribute('data-active-panel')
+
+		if (skipMotion) {
+			page.classList.remove('is-panel-returning')
+			return
+		}
+
+		page.classList.add('is-panel-returning')
+		returnStateTimeoutId = window.setTimeout(() => {
+			returnStateTimeoutId = 0
+			page.classList.add('is-panel-revealing')
+			revealStateTimeoutId = window.setTimeout(() => {
+				page.classList.remove('is-panel-revealing')
+				revealStateTimeoutId = 0
+			}, pageTileRevealCleanupDelay)
+			returnStateFrameId = window.requestAnimationFrame(() => {
+				page.classList.remove('is-panel-returning')
+				returnStateFrameId = 0
+			})
+		}, pageReturnRevealDelay)
+	}
+
+	const resetPagePanelState = ({ preserveRevealState = false } = {}) => {
+		if (!page) {
+			return
+		}
+
+		clearPageReturnFrame()
+		clearPageReturnTimeout()
+		if (!preserveRevealState) {
+			clearPageRevealTimeout()
+		}
+		clearPagePanelOrigin()
+		page.classList.remove('is-panel-active')
+		page.classList.remove('is-panel-returning')
+		if (!preserveRevealState) {
+			page.classList.remove('is-panel-revealing')
+		}
+		page.removeAttribute('data-active-panel')
 	}
 
 	const getHashPanelId = () => {
@@ -889,6 +1001,7 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 		panel.classList.remove('is-closing')
 		panel.classList.remove('is-open')
 		panel.classList.add('is-visible')
+		activatePagePanelState()
 		panel.dispatchEvent(new CustomEvent('tilepanel:open'))
 		trigger.setAttribute('aria-expanded', 'true')
 		document.documentElement.classList.add('tile-panel-active')
@@ -929,6 +1042,7 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 		panel.classList.remove('is-visible')
 		panel.hidden = true
 		panel.setAttribute('aria-hidden', 'true')
+		resetPagePanelState({ preserveRevealState: true })
 		panel.dispatchEvent(new CustomEvent('tilepanel:closed'))
 		document.documentElement.classList.remove('tile-panel-active')
 		document.body.classList.remove('tile-panel-active')
@@ -946,12 +1060,14 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 		isOpen = false
 		window.clearTimeout(focusTimerId)
 		syncPanelStart()
+		const skipPanelMotion = shouldSkipPanelMotion()
+		beginPagePanelReturn(skipPanelMotion)
 		panel.dispatchEvent(new CustomEvent('tilepanel:close-start'))
 		trigger.setAttribute('aria-expanded', 'false')
 		panel.classList.add('is-closing')
 		panel.classList.remove('is-open')
 
-		if (shouldSkipPanelMotion()) {
+		if (skipPanelMotion) {
 			finishClose()
 			return
 		}

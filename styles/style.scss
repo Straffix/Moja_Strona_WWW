@@ -151,6 +151,7 @@ a {
 	background-size: 3px 3px;
 	display: block;
 	mix-blend-mode: screen;
+	transition: opacity 0.42s ease;
 }
 
 .page::after {
@@ -161,6 +162,7 @@ a {
 	pointer-events: none;
 	background-color: rgba(0, 0, 0, 0.411);
 	display: block;
+	transition: opacity 0.42s ease;
 }
 
 .background {
@@ -169,6 +171,9 @@ a {
 	z-index: auto;
 	pointer-events: none;
 	overflow: hidden;
+	transition:
+		opacity 0.46s ease,
+		transform 0.62s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .ambient {
@@ -439,6 +444,9 @@ a {
 	z-index: 1;
 	height: 60%;
 	background: linear-gradient(180deg, rgba(colors.$panel, 0.2), rgba(colors.$panel-strong, 0.54));
+	transition:
+		opacity 0.46s ease,
+		transform 0.62s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .intro {
@@ -528,6 +536,11 @@ a {
 	display: grid;
 	justify-items: center;
 	gap: 0.82rem;
+	transform-origin: top right;
+	transition:
+		opacity 0.46s ease,
+		transform 0.72s cubic-bezier(0.22, 1, 0.36, 1),
+		filter 0.46s ease;
 }
 
 .social {
@@ -624,7 +637,11 @@ a {
 	letter-spacing: var(--hero-brand-letter-spacing);
 	text-transform: none;
 	text-shadow: 0 0 24px rgba(colors.$white, 0.12);
-	transition: opacity 0.16s ease;
+	transform-origin: left top;
+	transition:
+		opacity 0.42s ease,
+		transform 0.74s cubic-bezier(0.22, 1, 0.36, 1),
+		filter 0.42s ease;
 }
 
 .brand-word {
@@ -675,6 +692,11 @@ a {
 	display: inline-flex;
 	align-items: center;
 	gap: 0.15em;
+	transform-origin: left center;
+	transition:
+		opacity 0.46s ease,
+		transform 0.74s cubic-bezier(0.22, 1, 0.36, 1),
+		filter 0.46s ease;
 }
 
 .tagline__text {
@@ -731,6 +753,7 @@ a {
 .tile {
 	--tile-bg: #{rgba(colors.$white, 0.13)};
 	--tile-hover-bg: #{rgba(colors.$white, 0.2)};
+	--tile-return-delay: 0ms;
 	display: flex;
 	flex-direction: column;
 	align-items: center;
@@ -743,10 +766,39 @@ a {
 	background-color: var(--tile-bg);
 	cursor: pointer;
 	text-align: center;
+	transform-origin: center;
+	will-change: opacity, transform, filter;
 	transition:
 		background-color 0.3s ease-in-out,
 		border-color 0.3s ease-in-out,
-		box-shadow 0.3s ease-in-out;
+		box-shadow 0.3s ease-in-out,
+		opacity 0.44s ease,
+		transform 0.72s cubic-bezier(0.22, 1, 0.36, 1),
+		filter 0.44s ease;
+}
+
+.tiles > .tile:nth-child(1) {
+	--tile-return-delay: 0ms;
+}
+
+.tiles > .tile:nth-child(2) {
+	--tile-return-delay: 55ms;
+}
+
+.tiles > .tile:nth-child(3) {
+	--tile-return-delay: 110ms;
+}
+
+.tiles > .tile:nth-child(4) {
+	--tile-return-delay: 165ms;
+}
+
+.tiles > .tile:nth-child(5) {
+	--tile-return-delay: 220ms;
+}
+
+.tiles > .tile:nth-child(6) {
+	--tile-return-delay: 275ms;
 }
 
 .tile:hover,
@@ -796,6 +848,88 @@ a {
 .tile:focus-visible .label {
 	color: rgba(colors.$white, 0.98);
 	text-shadow: 0 0 1.6rem rgba(colors.$white, 0.18);
+}
+
+.page.is-panel-active::before,
+.page.is-panel-active .background,
+.page.is-panel-active .lower-band {
+	opacity: 0;
+}
+
+.page.is-panel-active .background,
+.page.is-panel-active .lower-band {
+	transform: scale(1.012);
+}
+
+.page.is-panel-active .top-actions,
+.page.is-panel-active .brand,
+.page.is-panel-active .tagline,
+.page.is-panel-active .tile:not(.is-panel-origin) {
+	opacity: 0;
+	filter: blur(0.22rem);
+	pointer-events: none;
+	transition-delay: 0s;
+}
+
+.page.is-panel-active .top-actions {
+	transform: translate3d(0, -0.35rem, 0) scale(0.9);
+}
+
+.page.is-panel-active .brand {
+	transform: translate3d(-0.4rem, -0.18rem, 0) scale(0.93);
+}
+
+.page.is-panel-active .tagline {
+	transform: translate3d(-0.35rem, 0, 0) scale(0.95);
+}
+
+.page.is-panel-active .tile:not(.is-panel-origin) {
+	transform: translate3d(0, 0.45rem, 0) scale(0.9);
+}
+
+.page.is-panel-returning::before {
+	opacity: 0;
+	transition: none;
+}
+
+.page.is-panel-returning .background,
+.page.is-panel-returning .lower-band {
+	opacity: 0;
+	transform: scale(1.012);
+	transition: none;
+}
+
+.page.is-panel-returning .top-actions,
+.page.is-panel-returning .brand,
+.page.is-panel-returning .tagline {
+	opacity: 0;
+	filter: blur(0.22rem);
+	pointer-events: none;
+	transition: none;
+}
+
+.page.is-panel-returning .top-actions {
+	transform: translate3d(0, -0.35rem, 0) scale(0.9);
+}
+
+.page.is-panel-returning .brand {
+	transform: translate3d(-0.4rem, -0.18rem, 0) scale(0.93);
+}
+
+.page.is-panel-returning .tagline {
+	transform: translate3d(-0.35rem, 0, 0) scale(0.95);
+}
+
+.page.is-panel-returning .tile {
+	opacity: 0;
+	filter: blur(0.24rem);
+	pointer-events: none;
+	transform: translate3d(0, 0.85rem, 0) scale(0.78);
+	transition: none;
+}
+
+.page.is-panel-revealing .tile {
+	transition-delay: 0s, 0s, 0s, var(--tile-return-delay), var(--tile-return-delay), var(--tile-return-delay);
 }
 
 .tile--strategic {
@@ -1926,6 +2060,42 @@ a {
 	object-position: center;
 }
 
+.portfolio-work__media--mock-stage {
+	display: block;
+	grid-template-columns: none;
+	grid-template-rows: none;
+	gap: 0;
+	padding: 0;
+	border-color: transparent;
+	background: transparent;
+	box-shadow: none;
+}
+
+.portfolio-work__media--mock-stage::before {
+	content: none;
+}
+
+.portfolio-work__media--mock-stage:hover,
+.portfolio-work__media--mock-stage:focus-visible {
+	border-color: transparent;
+	background: transparent;
+	box-shadow: none;
+}
+
+.portfolio-shot--mock-stage {
+	width: 100%;
+	margin: 0;
+	aspect-ratio: 1536 / 1024;
+	border: 0;
+	background: transparent;
+	box-shadow: none;
+}
+
+.portfolio-shot--mock-stage img {
+	object-fit: contain;
+	object-position: center;
+}
+
 @media (max-width: 900px) {
 	.portfolio-work,
 	.portfolio-work--reverse {
@@ -2036,6 +2206,23 @@ a {
 		width: 100%;
 		justify-self: stretch;
 		transform: none;
+	}
+
+	.portfolio-work__media--mock-stage {
+		display: block;
+		grid-template-columns: none;
+		grid-template-rows: none;
+		gap: 0;
+		padding: 0;
+	}
+
+	.portfolio-work__media--mock-stage::before {
+		content: none;
+	}
+
+	.portfolio-shot--mock-stage {
+		width: 100%;
+		aspect-ratio: 1536 / 1024;
 	}
 }
 
