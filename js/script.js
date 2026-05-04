@@ -558,6 +558,9 @@ function initProjectSliders() {
 
 function initProjectSlider(slider) {
 	const slides = Array.from(slider.querySelectorAll('[data-project-slide]'))
+	const prevButton = slider.querySelector('[data-project-prev]')
+	const nextButton = slider.querySelector('[data-project-next]')
+	const toggleButton = slider.querySelector('[data-project-toggle]')
 	if (slides.length < 2) {
 		return
 	}
@@ -571,6 +574,42 @@ function initProjectSlider(slider) {
 	)
 	let timerId = 0
 	let preloadTimerId = 0
+	let isUserPaused = false
+
+	const clearRotationTimer = () => {
+		if (timerId) {
+			window.clearInterval(timerId)
+			timerId = 0
+		}
+	}
+
+	const clearPreloadTimer = () => {
+		if (preloadTimerId) {
+			window.clearTimeout(preloadTimerId)
+			preloadTimerId = 0
+		}
+	}
+
+	const syncControlsState = () => {
+		slider.classList.toggle('is-user-paused', isUserPaused)
+
+		if (!toggleButton) {
+			return
+		}
+
+		toggleButton.disabled = reduceMotionQuery.matches
+		toggleButton.setAttribute('aria-pressed', isUserPaused ? 'true' : 'false')
+
+		if (reduceMotionQuery.matches) {
+			toggleButton.setAttribute('aria-label', 'Automatyczne przewijanie wyłączone przez ustawienia ograniczenia ruchu')
+			return
+		}
+
+		toggleButton.setAttribute(
+			'aria-label',
+			isUserPaused ? 'Wznów automatyczne przewijanie projektów' : 'Wstrzymaj automatyczne przewijanie projektów',
+		)
+	}
 
 	const loadSlideMedia = slide => {
 		const lazyImages = slide.querySelectorAll('img[data-src]')
@@ -582,7 +621,7 @@ function initProjectSlider(slider) {
 	}
 
 	const preloadNextSlide = () => {
-		window.clearTimeout(preloadTimerId)
+		clearPreloadTimer()
 		if (reduceMotionQuery.matches) {
 			return
 		}
@@ -610,27 +649,97 @@ function initProjectSlider(slider) {
 	}
 
 	const pause = () => {
-		if (timerId) {
-			window.clearInterval(timerId)
-			timerId = 0
-		}
-		window.clearTimeout(preloadTimerId)
+		clearRotationTimer()
+		clearPreloadTimer()
 		slider.classList.add('is-paused')
 	}
 
 	const start = () => {
-		if (timerId || reduceMotionQuery.matches) {
+		if (timerId || reduceMotionQuery.matches || isUserPaused) {
+			slider.classList.add('is-paused')
 			return
 		}
+
 		slider.classList.remove('is-paused')
 		timerId = window.setInterval(() => showSlide(activeIndex + 1), interval)
+		preloadNextSlide()
+	}
+
+	const clearPointerFocus = () => {
+		if (isUserPaused) {
+			return
+		}
+
+		const activeElement = document.activeElement
+		if (!(activeElement instanceof HTMLElement) || !slider.contains(activeElement)) {
+			return
+		}
+
+		if (activeElement.matches(':focus-visible')) {
+			return
+		}
+
+		activeElement.blur()
+	}
+
+	const goToSlide = nextIndex => {
+		pause()
+		showSlide(nextIndex)
+	}
+
+	const togglePlayback = () => {
+		isUserPaused = !isUserPaused
+		syncControlsState()
+
+		if (isUserPaused) {
+			pause()
+			return
+		}
+
+		start()
 	}
 
 	slider.addEventListener('mouseenter', pause)
-	slider.addEventListener('mouseleave', start)
+	slider.addEventListener('mouseleave', () => {
+		clearPointerFocus()
+		start()
+	})
 	slider.addEventListener('focusin', pause)
-	slider.addEventListener('focusout', start)
+	slider.addEventListener('focusout', event => {
+		const nextFocused = event.relatedTarget
+		if (nextFocused instanceof Node && slider.contains(nextFocused)) {
+			return
+		}
+
+		start()
+	})
+
+	if (prevButton) {
+		prevButton.addEventListener('click', event => {
+			event.preventDefault()
+			event.stopPropagation()
+			goToSlide(activeIndex - 1)
+		})
+	}
+
+	if (nextButton) {
+		nextButton.addEventListener('click', event => {
+			event.preventDefault()
+			event.stopPropagation()
+			goToSlide(activeIndex + 1)
+		})
+	}
+
+	if (toggleButton) {
+		toggleButton.addEventListener('click', event => {
+			event.preventDefault()
+			event.stopPropagation()
+			togglePlayback()
+		})
+	}
+
 	addMediaQueryListener(reduceMotionQuery, () => {
+		syncControlsState()
 		if (reduceMotionQuery.matches) {
 			pause()
 			return
@@ -639,6 +748,7 @@ function initProjectSlider(slider) {
 	})
 
 	showSlide(activeIndex)
+	syncControlsState()
 	if (reduceMotionQuery.matches) {
 		pause()
 		return
@@ -1024,11 +1134,8 @@ function initContactPanel() {
 	}
 
 	const panelScrollRoot = panel.querySelector('[data-panel-scroll-root]')
-	const focusField = panel.querySelector('[data-contact-focus]')
 	const form = panel.querySelector('[data-contact-form]')
-	const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 	const mobileContactQuery = window.matchMedia('(max-width: 640px)')
-	let focusTimerId = 0
 	let mobileFieldTimerId = 0
 	let activeMobileField = null
 
@@ -1092,21 +1199,6 @@ function initContactPanel() {
 			mobileFieldTimerId = 0
 		}, 260)
 	}
-
-	const focusContactField = () => {
-		window.clearTimeout(focusTimerId)
-
-		if (!focusField || mobileContactQuery.matches) {
-			return
-		}
-
-		const focusDelay = reduceMotionQuery.matches ? 0 : 620
-		focusTimerId = window.setTimeout(() => {
-			focusField.focus({ preventScroll: true })
-		}, focusDelay)
-	}
-
-	panel.addEventListener('tilepanel:open', focusContactField)
 	panel.addEventListener('tilepanel:open', () => {
 		window.requestAnimationFrame(() => {
 			syncMobileViewportMetrics()
@@ -1114,7 +1206,6 @@ function initContactPanel() {
 	})
 
 	panel.addEventListener('tilepanel:closed', () => {
-		window.clearTimeout(focusTimerId)
 		clearMobileFieldTimer()
 		activeMobileField = null
 		resetMobileViewportMetrics()
