@@ -7,7 +7,7 @@
     <meta name="theme-color" content="#7e4162" data-theme-color>
     <title>Arkadiusz Lisiecki</title>
     <meta name="description"
-        content="Arkadiusz Lisiecki - front-end developer. Projektowanie i tworzenie stron WWW, landing page'y oraz interfejsów z naciskiem na wydajność, SEO i kontakt biznesowy.">
+        content="Arkadiusz Lisiecki - Front-End Developer. Projektowanie i tworzenie stron WWW, landing page'y oraz interfejsów z naciskiem na wydajność, SEO i kontakt biznesowy.">
     <script>document.documentElement.classList.add('has-js');</script>
     <link rel="stylesheet" href="styles/css/style.css">
     <script type="application/ld+json">
@@ -60,6 +60,16 @@
         <symbol id="icon-arrow-up-right" viewBox="0 0 24 24">
             <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
                 d="M7 17 17 7M8 7h9v9" />
+        </symbol>
+        <symbol id="icon-external-link" viewBox="0 0 24 24">
+            <path fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round"
+                d="M13.1 5H7.75A2.75 2.75 0 0 0 5 7.75v8.5A2.75 2.75 0 0 0 7.75 19h8.5A2.75 2.75 0 0 0 19 16.25v-2.35" />
+            <path fill="none" stroke="currentColor" stroke-width="2.45" stroke-linecap="round" stroke-linejoin="round"
+                d="M10.2 13.8 19 5M13.9 5H19v5.1" />
+        </symbol>
+        <symbol id="icon-arrow-down-line" viewBox="0 0 24 24">
+            <path fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"
+                d="M12 4.5v14m-5.25-5.25L12 18.5l5.25-5.25" />
         </symbol>
         <symbol id="icon-paperclip" viewBox="0 0 24 24">
             <path fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
@@ -517,6 +527,11 @@
 
             <a class="tile tile--latest" href="https://www.arkadiuszlisiecki.pl/job/new/index.html" target="_blank"
                 rel="noreferrer" aria-label="Otwórz najnowszy projekt">
+                <span class="tile__external-indicator" aria-hidden="true">
+                    <svg viewBox="0 0 10 10" focusable="false">
+                        <use href="#icon-external-link"></use>
+                    </svg>
+                </span>
                 <img class="tile-icon" src="img/icons/new.svg" alt="" aria-hidden="true">
                 <p class="label">Featured</p>
             </a>
@@ -677,7 +692,7 @@
                 </header>
 
                 <div class="portfolio-list" data-panel-scroll-root>
-                    <article class="portfolio-work" id="portfolio-dashboardit">
+                    <article class="portfolio-work" id="portfolio-dashboardit" data-panel-scroll-hero>
                         <div class="portfolio-work__copy">
                             <p class="portfolio-work__meta">01 / Dashboard SaaS</p>
                             <h3>Dashboard IT</h3>
@@ -708,6 +723,12 @@
                                     alt="Główny widok projektu Dashboard IT" loading="lazy" decoding="async">
                             </figure>
                         </a>
+                        <button class="panel-scroll-cta" type="button" data-panel-scroll-next
+                            aria-label="Przewiń portfolio do kolejnego projektu">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <use href="#icon-arrow-down-line"></use>
+                            </svg>
+                        </button>
                     </article>
 
                     <article class="portfolio-work portfolio-work--reverse" id="portfolio-showfm">
@@ -974,6 +995,12 @@
                         </a>
                     </article>
                 </div>
+                <button class="panel-scroll-top" type="button" data-panel-scroll-top aria-label="Przewiń portfolio do góry"
+                    aria-hidden="true" tabindex="-1">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <use href="#icon-arrow-down-line"></use>
+                    </svg>
+                </button>
             </div>
         </section>
 
@@ -996,7 +1023,7 @@
                 </header>
 
                 <div class="about-panel__body" data-panel-scroll-root>
-                    <section class="about-hero" aria-label="Kim jestem">
+                    <section class="about-hero" data-panel-scroll-hero aria-label="Kim jestem">
                         <div class="about-hero__copy">
                             <p class="about-kicker">Cześć! Nazywam się Arkadiusz Lisiecki.</p>
                             <h3>Minimalizm, czytelny układ i dobrze przemyślane detale.</h3>
@@ -1019,6 +1046,12 @@
                             <img src="img/me.png" width="853" height="1280" alt="Arkadiusz Lisiecki" loading="eager"
                                 fetchpriority="high" decoding="async">
                         </figure>
+                        <button class="panel-scroll-cta" type="button" data-panel-scroll-next
+                            aria-label="Przewiń sekcję O mnie niżej">
+                            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                <use href="#icon-arrow-down-line"></use>
+                            </svg>
+                        </button>
                     </section>
 
                     <section class="about-story" aria-label="Sposób pracy i kierunek rozwoju">
@@ -1121,6 +1154,12 @@
                         </div>
                     </section>
                 </div>
+                <button class="panel-scroll-top" type="button" data-panel-scroll-top aria-label="Przewiń sekcję O mnie do góry"
+                    aria-hidden="true" tabindex="-1">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <use href="#icon-arrow-down-line"></use>
+                    </svg>
+                </button>
             </div>
         </section>
 

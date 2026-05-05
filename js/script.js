@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	enhanceProjectMockups()
 	initProjectSliders()
 	initExpandingPanels()
+	initPanelScrollNavigation()
 	initPortfolioScrollReveal()
 	initContactPanel()
 	initThemeSwitcherLatest()
@@ -917,6 +918,145 @@ function setupPanelReveal(panel) {
 	}
 
 	panel.dataset.panelRevealReady = 'true'
+}
+
+function initPanelScrollNavigation() {
+	const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+	const panels = Array.from(document.querySelectorAll('.tile-panel'))
+
+	const getScrollBehavior = () => (reduceMotionQuery.matches ? 'auto' : 'smooth')
+
+	const getNextSection = heroSection => {
+		let nextSection = heroSection.nextElementSibling
+
+		while (nextSection && !(nextSection instanceof HTMLElement)) {
+			nextSection = nextSection.nextElementSibling
+		}
+
+		return nextSection instanceof HTMLElement ? nextSection : null
+	}
+
+	for (const panel of panels) {
+		const scrollRoot = panel.querySelector('[data-panel-scroll-root]')
+		const heroSection = scrollRoot?.querySelector('[data-panel-scroll-hero]')
+		const scrollDownButton = panel.querySelector('[data-panel-scroll-next]')
+		const scrollTopButton = panel.querySelector('[data-panel-scroll-top]')
+		if (!scrollRoot || !heroSection || (!scrollDownButton && !scrollTopButton)) {
+			continue
+		}
+
+		const nextSection = getNextSection(heroSection)
+		let syncFrameId = 0
+
+		const clearSyncFrame = () => {
+			if (!syncFrameId) {
+				return
+			}
+
+			window.cancelAnimationFrame(syncFrameId)
+			syncFrameId = 0
+		}
+
+		const setScrollTopButtonVisibility = isVisible => {
+			if (!scrollTopButton) {
+				return
+			}
+
+			scrollTopButton.classList.toggle('is-visible', isVisible)
+			scrollTopButton.setAttribute('aria-hidden', String(!isVisible))
+			scrollTopButton.tabIndex = isVisible ? 0 : -1
+		}
+
+		const setScrollDownButtonState = ({ isHidden, isDisabled }) => {
+			if (!scrollDownButton) {
+				return
+			}
+
+			scrollDownButton.classList.toggle('is-hidden', isHidden)
+			scrollDownButton.disabled = isDisabled
+			scrollDownButton.setAttribute('aria-hidden', String(isHidden))
+			scrollDownButton.tabIndex = !isHidden && !isDisabled ? 0 : -1
+		}
+
+		const scrollToTop = top => {
+			const maxScrollTop = Math.max(scrollRoot.scrollHeight - scrollRoot.clientHeight, 0)
+			const nextTop = Math.max(0, Math.min(top, maxScrollTop))
+
+			scrollRoot.scrollTo({
+				top: nextTop,
+				behavior: getScrollBehavior(),
+			})
+		}
+
+		const getTargetScrollTop = target => {
+			if (!(target instanceof HTMLElement)) {
+				return scrollRoot.clientHeight
+			}
+
+			const scrollRootRect = scrollRoot.getBoundingClientRect()
+			const targetRect = target.getBoundingClientRect()
+			return scrollRoot.scrollTop + (targetRect.top - scrollRootRect.top)
+		}
+
+		const syncButtons = () => {
+			clearSyncFrame()
+
+			const maxScrollTop = Math.max(scrollRoot.scrollHeight - scrollRoot.clientHeight, 0)
+			const topThreshold = Math.min(Math.max(Math.round(scrollRoot.clientHeight * 0.22), 160), 300)
+			const downHideThreshold = Math.min(Math.max(Math.round(scrollRoot.clientHeight * 0.08), 48), 120)
+			const isScrollTopVisible = maxScrollTop > 0 && scrollRoot.scrollTop > topThreshold
+			const isScrollDownHidden = maxScrollTop <= 0 || scrollRoot.scrollTop > downHideThreshold
+
+			setScrollTopButtonVisibility(isScrollTopVisible)
+			setScrollDownButtonState({
+				isHidden: isScrollDownHidden,
+				isDisabled: maxScrollTop <= 0 || !nextSection,
+			})
+		}
+
+		const scheduleSync = () => {
+			if (syncFrameId) {
+				return
+			}
+
+			syncFrameId = window.requestAnimationFrame(() => {
+				syncFrameId = 0
+				syncButtons()
+			})
+		}
+
+		scrollDownButton?.addEventListener('click', () => {
+			scrollToTop(nextSection ? getTargetScrollTop(nextSection) : scrollRoot.clientHeight)
+		})
+
+		scrollTopButton?.addEventListener('click', () => {
+			scrollToTop(0)
+		})
+
+		scrollRoot.addEventListener('scroll', scheduleSync, { passive: true })
+		panel.addEventListener('tilepanel:open', () => {
+			window.requestAnimationFrame(scheduleSync)
+		})
+		panel.addEventListener('tilepanel:closed', () => {
+			clearSyncFrame()
+			syncButtons()
+		})
+		panel.addEventListener('transitionend', event => {
+			if (event.target !== panel) {
+				return
+			}
+
+			if (event.propertyName !== 'width' && event.propertyName !== 'height') {
+				return
+			}
+
+			scheduleSync()
+		})
+
+		window.addEventListener('resize', scheduleSync)
+		addMediaQueryListener(reduceMotionQuery, scheduleSync)
+		syncButtons()
+	}
 }
 
 function initPortfolioScrollReveal() {
