@@ -29,8 +29,8 @@ function enhanceProjectMockups(root = document) {
 	const screens = root.querySelectorAll('.project-demo__frame--top .project-demo__screen, .project-demo__frame--bottom .project-demo__screen')
 
 	for (const screen of screens) {
-		if (screen.querySelector('.project-demo__image--backdrop')) {
-			continue
+		for (const backdrop of screen.querySelectorAll('.project-demo__image--backdrop')) {
+			backdrop.remove()
 		}
 
 		const image = screen.querySelector('.project-demo__image')
@@ -39,13 +39,6 @@ function enhanceProjectMockups(root = document) {
 		}
 
 		image.classList.add('project-demo__image--foreground')
-
-		const backdrop = image.cloneNode(true)
-		backdrop.classList.remove('project-demo__image--foreground')
-		backdrop.classList.add('project-demo__image--backdrop')
-		backdrop.setAttribute('aria-hidden', 'true')
-		backdrop.alt = ''
-		screen.insertBefore(backdrop, image)
 	}
 }
 

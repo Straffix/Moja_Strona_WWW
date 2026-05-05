@@ -1302,7 +1302,7 @@ a {
 	--screen-left: 15%;
 	--screen-width: 68.6%;
 	--screen-height: 56.6%;
-	--screen-radius: 0.6rem;
+	--screen-radius: 0;
 	--screen-clip-tl: 0% 0%;
 	--screen-clip-tr: 100% 0%;
 	--screen-clip-br: 100% 100%;
@@ -1341,11 +1341,11 @@ a {
 	--screen-left: 18%;
 	--screen-width: 62%;
 	--screen-height: 88%;
-	--screen-radius: 0.6rem;
+	--screen-radius: 0;
 	--screen-clip-tl: 0% 0%;
 	--screen-clip-tr: 100% 0%;
 	--screen-clip-br: 100% 100%;
-	--screen-clip-bl: 10% 98%;
+	--screen-clip-bl: 0% 100%;
 	--screen-offset-x: 0.18%;
 	--screen-offset-y: 0%;
 	--screen-skew-x: -6deg;
@@ -1399,8 +1399,8 @@ a {
 
 .project-demo__image--foreground {
 	z-index: 2;
-	object-fit: contain;
-	object-position: 50% 50%;
+	object-fit: var(--content-fit, cover);
+	object-position: var(--content-position, 50% 50%);
 }
 
 .project-slide--designin .project-demo__frame--main {
@@ -2356,7 +2356,7 @@ a {
 	transform: translateY(0.18rem);
 }
 
-.portfolio-shot img {
+.portfolio-shot > img {
 	display: block;
 	width: 100%;
 	height: 100%;
@@ -2387,15 +2387,121 @@ a {
 }
 
 .portfolio-shot--mock-stage {
+	display: grid;
+	place-items: center;
 	width: 100%;
 	margin: 0;
+	overflow: visible;
 	aspect-ratio: 1536 / 1024;
 	border: 0;
 	background: transparent;
 	box-shadow: none;
 }
 
-.portfolio-shot--mock-stage img {
+.portfolio-mock {
+	position: relative;
+	isolation: isolate;
+	width: 100%;
+	height: 100%;
+	aspect-ratio: 1536 / 1024;
+}
+
+.portfolio-mock::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	z-index: 0;
+	background: url('../../img/mock-main.png') center / 100% 100% no-repeat;
+	pointer-events: none;
+}
+
+.portfolio-mock .project-demo__frame {
+	pointer-events: none;
+}
+
+.portfolio-mock .project-demo__frame::before {
+	content: none;
+}
+
+//USTAWIĆ ODPOWIEDNIE SKALOWANIE SCALOWANIE SZUKAJ TUTAJ!
+
+.portfolio-mock .project-demo__frame--main {
+	--device-top: 35.1%;
+	--device-left: 12.5%;
+	--device-width: 40.2%;
+	--device-height: 33.3%;
+	--screen-top: 6%;
+	--screen-left: 0%;
+	--screen-width: 100%;
+	--screen-height: 100%;
+	--screen-radius: 0;
+	--screen-clip-tl: 0% 0%;
+	--screen-clip-tr: 100% 0%;
+	--screen-clip-br: 100% 100%;
+	--screen-clip-bl: 0% 100%;
+	--screen-bg: #ffffff;
+	--screen-shadow: none;
+	--screen-overlay: none;
+	--content-fit: cover;
+	--content-position: 50% 0%;
+	--content-scale-x: 1.018;
+	--content-scale-y: 1.018;
+	--content-origin: 50% 0%;
+}
+
+.portfolio-mock .project-demo__frame--top {
+	--device-top: 37%;
+	--device-left: 58.7%;
+	--device-width: 19%;
+	--device-height: 45%;
+	--screen-top: 0%;
+	--screen-left: 0%;
+	--screen-width: 100%;
+	--screen-height: 100%;
+	--screen-radius: 0;
+	--screen-clip-tl: 0% 0%;
+	--screen-clip-tr: 100% 0%;
+	--screen-clip-br: 100% 100%;
+	--screen-clip-bl: 0% 100%;
+	--screen-bg: #ffffff;
+	--screen-shadow: none;
+	--screen-overlay: none;
+	--content-fit: cover;
+	--content-position: 50% 0%;
+	--content-scale-x: 1.04;
+	--content-scale-y: 1.04;
+	--content-origin: 50% 0%;
+}
+
+.portfolio-mock .project-demo__frame--bottom {
+	--device-top: 51.17%;
+	--device-left: 80.47%;
+	--device-width: 11.33%;
+	--device-height: 31.35%;
+	--screen-top: 0%;
+	--screen-left: 0%;
+	--screen-width: 100%;
+	--screen-height: 100%;
+	--screen-radius: 0;
+	--screen-clip-tl: 0% 0%;
+	--screen-clip-tr: 100% 0%;
+	--screen-clip-br: 100% 100%;
+	--screen-clip-bl: 0% 100%;
+	--screen-offset-x: 0%;
+	--screen-offset-y: 0%;
+	--screen-skew-x: 0deg;
+	--screen-skew-y: 0deg;
+	--screen-bg: #ffffff;
+	--screen-shadow: none;
+	--screen-overlay: none;
+	--content-fit: cover;
+	--content-position: 50% 0%;
+	--content-scale-x: 1.055;
+	--content-scale-y: 1.055;
+	--content-origin: 50% 0%;
+}
+
+.portfolio-shot--mock-stage > img {
 	object-fit: contain;
 	object-position: center;
 }
