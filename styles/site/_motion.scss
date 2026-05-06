@@ -1,0 +1,66 @@
+@use '../colors' as colors;
+
+@mixin render {
+	@media (prefers-reduced-motion: reduce) {
+		.tagline__cursor {
+			animation: none;
+			opacity: 0.78;
+		}
+	}
+
+	@media (hover: none) and (pointer: coarse) {
+		.tile-panel__close:focus-visible {
+			outline: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.panel-scroll-cta {
+			animation: none;
+		}
+
+		.panel-scroll-cta,
+		.panel-scroll-top {
+			transition: none;
+		}
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		#about-panel.tile-panel.is-open .about-portrait img {
+			animation: aboutPortraitReveal 0.85s ease both;
+			animation-delay: calc(
+				var(--panel-reveal-base-delay) + (var(--panel-reveal-group, 0) * var(--panel-reveal-group-step)) +
+					(var(--panel-reveal-phase, 0) * var(--panel-reveal-phase-step)) + 90ms
+			);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		*,
+		*::before,
+		*::after {
+			animation: none !important;
+			transition: none !important;
+		}
+
+		html.has-js:not(.intro-complete),
+		html.has-js:not(.intro-complete) body {
+			overflow: auto;
+		}
+
+		.has-js:not(.intro-complete) .brand {
+			opacity: 1;
+		}
+
+		.has-js .intro {
+			display: none;
+		}
+
+		.about-portrait img {
+			opacity: 1;
+			transform: scale(1.04);
+		}
+	}
+}
+
+

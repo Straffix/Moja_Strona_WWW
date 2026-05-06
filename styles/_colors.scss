@@ -30,3 +30,8 @@ $gold-light: #fff1c1;
 $city-window: #e1eaff;
 $city-frame: #222d34;
 $city-shadow: #06080c;
+
+@function alpha($color, $opacity) {
+	@return rgba($color, $opacity);
+}
+
