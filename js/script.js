@@ -29,6 +29,9 @@ function enhanceProjectMockups(root = document) {
 	const screens = root.querySelectorAll('.project-demo__frame--top .project-demo__screen, .project-demo__frame--bottom .project-demo__screen')
 
 	for (const screen of screens) {
+		const frame = screen.closest('.project-demo__frame')
+		const isPortfolioPhone = Boolean(frame?.classList.contains('project-demo__frame--bottom') && frame.closest('.portfolio-mock'))
+
 		for (const backdrop of screen.querySelectorAll('.project-demo__image--backdrop')) {
 			backdrop.remove()
 		}
@@ -36,6 +39,14 @@ function enhanceProjectMockups(root = document) {
 		const image = screen.querySelector('.project-demo__image')
 		if (!image) {
 			continue
+		}
+
+		if (isPortfolioPhone) {
+			const backdrop = image.cloneNode()
+			backdrop.className = 'project-demo__image project-demo__image--backdrop'
+			backdrop.alt = ''
+			backdrop.setAttribute('aria-hidden', 'true')
+			screen.insertBefore(backdrop, image)
 		}
 
 		image.classList.add('project-demo__image--foreground')
