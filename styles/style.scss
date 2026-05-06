@@ -2426,10 +2426,10 @@ a {
 //USTAWIĆ ODPOWIEDNIE SKALOWANIE SCALOWANIE SZUKAJ TUTAJ!
 
 .portfolio-mock .project-demo__frame--main {
-	--device-top: 35.1%;
-	--device-left: 12.5%;
-	--device-width: 40.2%;
-	--device-height: 33.3%;
+	--device-top: 35%;
+	--device-left: 12.4%;
+	--device-width: 40.3%;
+	--device-height: 33.4%;
 	--screen-top: 6%;
 	--screen-left: 0%;
 	--screen-width: 100%;
@@ -2450,10 +2450,10 @@ a {
 }
 
 .portfolio-mock .project-demo__frame--top {
-	--device-top: 37%;
+	--device-top: 36.6%;
 	--device-left: 58.7%;
 	--device-width: 19%;
-	--device-height: 45%;
+	--device-height: 44%;
 	--screen-top: 0%;
 	--screen-left: 0%;
 	--screen-width: 100%;
@@ -2474,15 +2474,15 @@ a {
 }
 
 .portfolio-mock .project-demo__frame--bottom {
-	--device-top: 51.17%;
-	--device-left: 80.47%;
-	--device-width: 11.33%;
-	--device-height: 31.35%;
+	--device-top: 52.3%;
+	--device-left: 82.1%;
+	--device-width: 8.6%;
+	--device-height: 29.5%;
 	--screen-top: 0%;
 	--screen-left: 0%;
 	--screen-width: 100%;
 	--screen-height: 100%;
-	--screen-radius: 0;
+	--screen-radius: 5px;
 	--screen-clip-tl: 0% 0%;
 	--screen-clip-tr: 100% 0%;
 	--screen-clip-br: 100% 100%;
@@ -2495,10 +2495,10 @@ a {
 	--screen-shadow: none;
 	--screen-overlay: none;
 	--content-fit: cover;
-	--content-position: 50% 0%;
+	--content-position: 40% 0;
 	--content-scale-x: 1.055;
 	--content-scale-y: 1.055;
-	--content-origin: 50% 0%;
+	--content-origin: 0% 0%;
 }
 
 .portfolio-shot--mock-stage > img {
