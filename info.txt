@@ -1,0 +1,3 @@
+Na mobilnym portfolio, po kliknięciu na strzałeczkę przewijającą stronę w dół, strona nie jest równa.
+Sprawdzić mobilny wygląd strony głownej - znika mockup itd.
+Dodać stopkę po prawej stronie na dole.
