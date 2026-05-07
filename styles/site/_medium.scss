@@ -2,8 +2,8 @@
 
 @mixin render {
 	@media (max-width: 979px) {
-		.project-slider {
-			--project-demo-lift: -3.2rem;
+		.project-demo {
+			transform: translateY(-3.2rem);
 		}
 
 		.project-slide {
@@ -97,12 +97,24 @@
 	}
 
 	@media (max-width: 979px) and (max-height: 540px) and (orientation: landscape) {
-		.page {
-			--hero-brand-letter-spacing: 0.12em;
-			--hero-brand-word-size: clamp(1.9rem, 3vw, 2.6rem);
-			--hero-brand-trademark-size: clamp(0.82rem, 1.2vw, 0.95rem);
-			--hero-brand-trademark-gap: 0.12em;
-			--hero-brand-max-width: min(44vw, calc(100vw - 10rem));
+		.intro-brand,
+		.brand {
+			letter-spacing: 0.12em;
+		}
+
+		.intro-brand {
+			max-width: min(44vw, calc(100vw - 10rem));
+		}
+
+		.intro-brand-word,
+		.brand-word {
+			font-size: clamp(1.9rem, 3vw, 2.6rem);
+		}
+
+		.intro-brand-trademark,
+		.brand-trademark {
+			margin-left: 0.12em;
+			font-size: clamp(0.82rem, 1.2vw, 0.95rem);
 		}
 
 		.top-actions {
@@ -185,8 +197,8 @@
 			padding: 0.35rem;
 		}
 
-		.project-slider {
-			--project-demo-lift: 0;
+		.project-demo {
+			transform: translateY(0);
 		}
 
 		.project-slider-status {

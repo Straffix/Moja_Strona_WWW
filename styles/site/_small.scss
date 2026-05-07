@@ -2,15 +2,23 @@
 
 @mixin render {
 	@media (max-width: 640px) {
-		#portfolio-panel.tile-panel {
-			--panel-section-top-margin: clamp(8.4rem, 12vh, 9.8rem);
-			--portfolio-panel-header-height: calc((max(1.5rem, env(safe-area-inset-top)) * 2) + 3rem);
-			--portfolio-panel-header-icon-size: clamp(1.8rem, 4.6vw, 2.3rem);
-			--portfolio-panel-title-size: clamp(1.45rem, 4.8vw, 1.9rem);
+		#portfolio-panel .tile-panel__content--portfolio {
+			grid-template-rows: calc((max(1.5rem, env(safe-area-inset-top)) * 2) + 3rem) minmax(0, 1fr);
+			overflow: hidden;
 		}
 
-		#portfolio-panel .tile-panel__content--portfolio {
-			overflow: hidden;
+		#portfolio-panel .portfolio-panel__header-icon {
+			width: clamp(1.8rem, 4.6vw, 2.3rem);
+			height: clamp(1.8rem, 4.6vw, 2.3rem);
+			transform: translateY(0.2rem);
+		}
+
+		#portfolio-panel .portfolio-title {
+			font-size: clamp(1.45rem, 4.8vw, 1.9rem);
+		}
+
+		#portfolio-panel .portfolio-work[data-panel-scroll-hero] {
+			min-height: calc(100svh - calc((max(1.5rem, env(safe-area-inset-top)) * 2) + 3rem));
 		}
 
 		#portfolio-panel .tile-panel__close,
@@ -125,15 +133,19 @@
 	}
 
 	@media (max-width: 640px) {
-		#about-panel.tile-panel {
-			--panel-section-top-margin: clamp(8.4rem, 12vh, 9.8rem);
-			--about-panel-header-height: calc((max(1.5rem, env(safe-area-inset-top)) * 2) + 3rem);
-			--about-panel-header-icon-size: clamp(1.8rem, 4.6vw, 2.3rem);
-			--about-panel-title-size: clamp(1.45rem, 4.8vw, 1.9rem);
+		#about-panel .tile-panel__content--about {
+			grid-template-rows: calc((max(1.5rem, env(safe-area-inset-top)) * 2) + 3rem) minmax(0, 1fr);
+			overflow: hidden;
 		}
 
-		#about-panel .tile-panel__content--about {
-			overflow: hidden;
+		#about-panel .about-panel__header-icon {
+			width: clamp(1.8rem, 4.6vw, 2.3rem);
+			height: clamp(1.8rem, 4.6vw, 2.3rem);
+			transform: translateY(0.2rem);
+		}
+
+		#about-panel .about-title {
+			font-size: clamp(1.45rem, 4.8vw, 1.9rem);
 		}
 
 		.about-panel__header {
@@ -155,6 +167,7 @@
 
 		.about-hero {
 			gap: 1.6rem;
+			min-height: calc(100svh - calc((max(1.5rem, env(safe-area-inset-top)) * 2) + 3rem));
 			padding: 2.4rem 1rem;
 		}
 
@@ -247,20 +260,28 @@
 	}
 
 	@media (max-width: 640px) {
-		.page {
-			--hero-brand-letter-spacing: 0.14em;
-			--hero-brand-word-size: clamp(1.8rem, 6.9vw, 1.8rem);
-			--hero-brand-trademark-size: clamp(0.95rem, 2.2vw, 1.1rem);
-			--hero-brand-trademark-gap: 0.14em;
-			--hero-brand-max-width: calc(100vw - 2.8rem);
-		}
-
-		.project-slider {
-			--project-demo-lift: -3.6rem;
+		.intro-brand,
+		.brand {
+			letter-spacing: 0.14em;
 		}
 
 		.intro-brand {
-			max-width: var(--hero-brand-max-width);
+			max-width: calc(100vw - 2.8rem);
+		}
+
+		.intro-brand-word,
+		.brand-word {
+			font-size: clamp(1.8rem, 6.9vw, 1.8rem);
+		}
+
+		.intro-brand-trademark,
+		.brand-trademark {
+			margin-left: 0.14em;
+			font-size: clamp(0.95rem, 2.2vw, 1.1rem);
+		}
+
+		.project-demo {
+			transform: translateY(-3.6rem);
 		}
 
 		.top-actions {
@@ -410,13 +431,6 @@
 			min-height: 8.4rem;
 		}
 
-		#contact-panel.tile-panel {
-			--panel-section-top-margin: clamp(7.6rem, 10vh, 8.6rem);
-			--contact-panel-header-height: calc((max(1.5rem, env(safe-area-inset-top)) * 2) + 3rem);
-			--contact-panel-header-icon-size: clamp(1.8rem, 4.6vw, 2.3rem);
-			--contact-panel-title-size: clamp(1.45rem, 4.8vw, 1.9rem);
-		}
-
 		.tile-panel__title {
 			font-size: clamp(3.2rem, 8vw, 4.2rem);
 		}
@@ -435,6 +449,7 @@
 			justify-items: start;
 			gap: 0.5rem;
 			width: 100%;
+			min-height: calc((max(1.5rem, env(safe-area-inset-top)) * 2) + 3rem);
 			margin: 0;
 			padding-inline: 1.55rem calc(max(1.5rem, env(safe-area-inset-right)) + 3rem + 0.9rem);
 			text-align: left;
@@ -445,7 +460,14 @@
 			gap: 0.5rem;
 		}
 
+		#contact-panel .tile-panel__heading-icon {
+			width: clamp(1.8rem, 4.6vw, 2.3rem);
+			height: clamp(1.8rem, 4.6vw, 2.3rem);
+			transform: translateY(0.24rem);
+		}
+
 		#contact-panel .tile-panel__contact-header .tile-panel__title {
+			font-size: clamp(1.45rem, 4.8vw, 1.9rem);
 			line-height: 1;
 			letter-spacing: 0.07em;
 			text-align: left;
@@ -630,11 +652,11 @@
 
 	@media (min-width: 520px) and (max-width: 640px) {
 		.project-slider {
-			--project-demo-lift: -3.8rem;
+			overflow: visible;
 		}
 
-		.project-slider {
-			overflow: visible;
+		.project-demo {
+			transform: translateY(-3.8rem);
 		}
 
 		.tiles {
@@ -673,8 +695,8 @@
 	}
 
 	@media (max-width: 520px) {
-		.project-slider {
-			--project-demo-lift: -2.4rem;
+		.project-demo {
+			transform: translateY(-2.4rem);
 		}
 
 		.tiles {
@@ -708,10 +730,6 @@
 	}
 
 	@media (max-width: 640px) {
-		#stack-panel.tile-panel {
-			--panel-section-top-margin: clamp(8.4rem, 12vh, 9.8rem);
-		}
-
 		#stack-panel.tile-panel.is-open {
 			padding: 0;
 		}
@@ -781,38 +799,28 @@
 	}
 
 	@media (max-width: 640px) {
-		.project-slider {
-			--project-demo-lift: -0.9rem;
-		}
-
-		#portfolio-panel.tile-panel,
-		#about-panel.tile-panel,
-		#contact-panel.tile-panel,
-		#stack-panel.tile-panel {
-			--panel-section-top-margin: clamp(6rem, 8.5vh, 6.8rem);
+		.project-demo {
+			transform: translateY(-0.9rem);
 		}
 
 		#portfolio-panel [data-panel-scroll-root],
 		#about-panel [data-panel-scroll-root],
 		#contact-panel [data-panel-scroll-root],
 		#stack-panel [data-panel-scroll-root] {
-			--panel-top-fade-height: clamp(2.8rem, 7vw, 4.2rem);
-			--panel-top-fade-soft-stop: calc(var(--panel-top-fade-height) * 0.24);
-			--panel-top-fade-mid-stop: calc(var(--panel-top-fade-height) * 0.58);
 			-webkit-mask-image: linear-gradient(
 				to bottom,
 				rgba(0, 0, 0, 0) 0,
-				rgba(0, 0, 0, 0.14) var(--panel-top-fade-soft-stop),
-				rgba(0, 0, 0, 0.52) var(--panel-top-fade-mid-stop),
-				#000 var(--panel-top-fade-height),
+				rgba(0, 0, 0, 0.14) calc(clamp(2.8rem, 7vw, 4.2rem) * 0.24),
+				rgba(0, 0, 0, 0.52) calc(clamp(2.8rem, 7vw, 4.2rem) * 0.58),
+				#000 clamp(2.8rem, 7vw, 4.2rem),
 				#000 100%
 			);
 			mask-image: linear-gradient(
 				to bottom,
 				rgba(0, 0, 0, 0) 0,
-				rgba(0, 0, 0, 0.14) var(--panel-top-fade-soft-stop),
-				rgba(0, 0, 0, 0.52) var(--panel-top-fade-mid-stop),
-				#000 var(--panel-top-fade-height),
+				rgba(0, 0, 0, 0.14) calc(clamp(2.8rem, 7vw, 4.2rem) * 0.24),
+				rgba(0, 0, 0, 0.52) calc(clamp(2.8rem, 7vw, 4.2rem) * 0.58),
+				#000 clamp(2.8rem, 7vw, 4.2rem),
 				#000 100%
 			);
 			-webkit-mask-repeat: no-repeat;

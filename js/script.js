@@ -208,6 +208,7 @@ function initSiteIntro() {
 	let fallbackTimerId = 0
 	let resizeTimerId = 0
 	let startQueued = false
+	let introFlightTransform = 'translate3d(0, 0, 0) scale(1)'
 
 	const finishIntro = () => {
 		if (isFinished) {
@@ -240,9 +241,7 @@ function initSiteIntro() {
 		const translateX = targetRect.left + targetRect.width / 2 - (introRect.left + introRect.width / 2)
 		const translateY = targetRect.top + targetRect.height / 2 - (introRect.top + introRect.height / 2)
 
-		introBrand.style.setProperty('--intro-move-x', `${translateX}px`)
-		introBrand.style.setProperty('--intro-move-y', `${translateY}px`)
-		introBrand.style.setProperty('--intro-scale', `${scale}`)
+		introFlightTransform = `translate3d(${translateX}px, ${translateY}px, 0) scale(${scale})`
 	}
 
 	function scheduleMotionSync() {
@@ -278,6 +277,7 @@ function initSiteIntro() {
 
 			syncIntroMotion()
 			intro.classList.add('is-flying')
+			introBrand.style.transform = introFlightTransform
 			fallbackTimerId = window.setTimeout(finishIntro, 900)
 		}, 850)
 	}
@@ -405,8 +405,6 @@ function initProjectSlider(slider) {
 		activeSlide.classList.add('is-active')
 		activeSlide.removeAttribute('aria-hidden')
 		activeSlide.removeAttribute('tabindex')
-		slider.style.setProperty('--tile-bg', activeSlide.dataset.tileBg || '')
-		slider.style.setProperty('--tile-hover-bg', activeSlide.dataset.tileHoverBg || '')
 		preloadNextSlide()
 	}
 
@@ -561,17 +559,55 @@ function registerPanelReveal(target, { group = 0, phase = 0, type = '' } = {}) {
 	}
 
 	target.setAttribute('data-panel-reveal', '')
-	target.style.setProperty('--panel-reveal-group', `${group}`)
-	target.style.setProperty('--panel-reveal-phase', `${phase}`)
 
 	if (type) {
 		target.dataset.panelRevealType = type
 	}
+
+	target.dataset.panelRevealGroup = String(group)
+	target.dataset.panelRevealPhase = String(phase)
 }
 
 function setupPanelReveal(panel) {
 	if (!panel || panel.dataset.panelRevealReady === 'true') {
 		return
+	}
+
+	const getRevealTiming = () => {
+		switch (panel.id) {
+			case 'portfolio-panel':
+				return { baseDelay: 560, groupStep: 78, phaseStep: 58 }
+			case 'about-panel':
+				return { baseDelay: 560, groupStep: 86, phaseStep: 60 }
+			case 'contact-panel':
+				return { baseDelay: 560, groupStep: 88, phaseStep: 60 }
+			case 'stack-panel':
+				return { baseDelay: 520, groupStep: 56, phaseStep: 42 }
+			default:
+				return { baseDelay: 560, groupStep: 92, phaseStep: 64 }
+		}
+	}
+
+	const syncRevealDelays = isOpen => {
+		const { baseDelay, groupStep, phaseStep } = getRevealTiming()
+
+		for (const item of panel.querySelectorAll('[data-panel-reveal]')) {
+			if (!(item instanceof HTMLElement)) {
+				continue
+			}
+
+			if (!isOpen) {
+				item.style.transitionDelay = '0s, 0s, 0s'
+				continue
+			}
+
+			const group = Number.parseFloat(item.dataset.panelRevealGroup || '0')
+			const phase = Number.parseFloat(item.dataset.panelRevealPhase || '0')
+			const delay = Math.max(Math.round(baseDelay + group * groupStep + phase * phaseStep), 0)
+			const delayValue = `${delay}ms`
+
+			item.style.transitionDelay = `${delayValue}, ${delayValue}, ${delayValue}`
+		}
 	}
 
 	if (panel.id === 'portfolio-panel') {
@@ -650,6 +686,19 @@ function setupPanelReveal(panel) {
 		})
 	}
 
+	panel.addEventListener('tilepanel:open', () => {
+		syncRevealDelays(true)
+	})
+
+	panel.addEventListener('tilepanel:close-start', () => {
+		syncRevealDelays(false)
+	})
+
+	panel.addEventListener('tilepanel:closed', () => {
+		syncRevealDelays(false)
+	})
+
+	syncRevealDelays(false)
 	panel.dataset.panelRevealReady = 'true'
 }
 
@@ -1030,16 +1079,29 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 	const shouldSkipPanelMotion = () =>
 		reduceMotionQuery.matches || Boolean(instantPanelQuery && instantPanelQuery.matches)
 
+	const getOpenPanelHeight = () => {
+		const viewport = window.visualViewport
+		return `${Math.max(Math.round(viewport ? viewport.height : window.innerHeight), 1)}px`
+	}
+
 	const syncPanelStart = () => {
 		const rect = trigger.getBoundingClientRect()
 		const triggerStyle = window.getComputedStyle(trigger)
 		const triggerBackground = triggerStyle.backgroundColor
 
-		panel.style.setProperty('--tile-panel-x', `${rect.left}px`)
-		panel.style.setProperty('--tile-panel-y', `${rect.top}px`)
-		panel.style.setProperty('--tile-panel-width', `${Math.max(rect.width, 1)}px`)
-		panel.style.setProperty('--tile-panel-height', `${Math.max(rect.height, 1)}px`)
-		panel.style.setProperty('--tile-panel-bg-start', triggerBackground)
+		panel.style.top = `${rect.top}px`
+		panel.style.left = `${rect.left}px`
+		panel.style.width = `${Math.max(rect.width, 1)}px`
+		panel.style.height = `${Math.max(rect.height, 1)}px`
+		panel.style.backgroundColor = triggerBackground
+	}
+
+	const syncPanelOpenState = () => {
+		panel.style.top = '0px'
+		panel.style.left = '0px'
+		panel.style.width = `${window.innerWidth}px`
+		panel.style.height = getOpenPanelHeight()
+		panel.style.backgroundColor = 'rgba(255, 255, 255, 0.98)'
 	}
 
 	const focusCloseButton = () => {
@@ -1227,6 +1289,7 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 		}
 
 		if (shouldSkipPanelMotion()) {
+			syncPanelOpenState()
 			panel.classList.add('is-open')
 			if (openedWithKeyboard) {
 				focusCloseButton()
@@ -1236,6 +1299,7 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 
 		panel.getBoundingClientRect()
 		window.requestAnimationFrame(() => {
+			syncPanelOpenState()
 			panel.classList.add('is-open')
 		})
 
@@ -1453,6 +1517,18 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 		}
 	})
 
+	window.addEventListener('resize', () => {
+		if (isOpen) {
+			syncPanelOpenState()
+		}
+	})
+
+	window.visualViewport?.addEventListener('resize', () => {
+		if (isOpen) {
+			syncPanelOpenState()
+		}
+	})
+
 	if (historyApi.getHistoryPanelId(window.history.state) === panel.id || getHashPanelId() === panel.id) {
 		openPanel(false, false)
 	}
@@ -1466,6 +1542,7 @@ function initContactPanel() {
 
 	const panelScrollRoot = panel.querySelector('[data-panel-scroll-root]')
 	const form = panel.querySelector('[data-contact-form]')
+	const contactLayout = panel.querySelector('.contact-layout')
 	const mobileContactQuery = window.matchMedia('(max-width: 640px)')
 	let mobileFieldTimerId = 0
 	let activeMobileField = null
@@ -1482,8 +1559,15 @@ function initContactPanel() {
 	}
 
 	const resetMobileViewportMetrics = () => {
-		panel.style.removeProperty('--tile-panel-open-height')
-		panel.style.removeProperty('--contact-panel-keyboard-offset')
+		panel.style.removeProperty('height')
+		panelScrollRoot?.style.removeProperty('scrollPaddingBottom')
+		contactLayout?.style.removeProperty('scrollPaddingBottom')
+
+		for (const field of panel.querySelectorAll('input, textarea, select')) {
+			if (field instanceof HTMLElement) {
+				field.style.removeProperty('scrollMarginBottom')
+			}
+		}
 	}
 
 	const syncMobileViewportMetrics = () => {
@@ -1496,12 +1580,20 @@ function initContactPanel() {
 		const viewportHeight = Math.max(Math.round(viewport ? viewport.height : window.innerHeight), 0)
 		const viewportOffsetTop = viewport ? viewport.offsetTop : 0
 		const keyboardOffset = Math.max(Math.round(window.innerHeight - viewportHeight - viewportOffsetTop), 0)
+		const bottomSpacing = `${Math.max(keyboardOffset + 24, 24)}px`
 
 		if (viewportHeight) {
-			panel.style.setProperty('--tile-panel-open-height', `${viewportHeight}px`)
+			panel.style.height = `${viewportHeight}px`
 		}
 
-		panel.style.setProperty('--contact-panel-keyboard-offset', `${keyboardOffset}px`)
+		panelScrollRoot?.style.setProperty('scrollPaddingBottom', bottomSpacing)
+		contactLayout?.style.setProperty('scrollPaddingBottom', bottomSpacing)
+
+		for (const field of panel.querySelectorAll('input, textarea, select')) {
+			if (field instanceof HTMLElement) {
+				field.style.scrollMarginBottom = `${keyboardOffset + 16}px`
+			}
+		}
 	}
 
 	const scrollMobileFieldIntoView = field => {
@@ -2114,10 +2206,10 @@ function initThemeSwitcher() {
 	const storageKey = 'folio-page-theme-v3'
 	const legacyStorageKey = 'folio-page-theme-v2'
 	const themes = [
-		{ id: 'purple-official', label: 'Purple official', accent: '#b6628f' },
-		{ id: 'blue', label: 'Blue', accent: '#59a5ef' },
-		{ id: 'green', label: 'Green', accent: '#61c784' },
-		{ id: 'black', label: 'Black', accent: '#202122' },
+		{ id: 'purple-official', label: 'Purple official', accent: '#b6628f', meta: '#7e4162' },
+		{ id: 'blue', label: 'Blue', accent: '#59a5ef', meta: '#1f568e' },
+		{ id: 'green', label: 'Green', accent: '#61c784', meta: '#226c3e' },
+		{ id: 'black', label: 'Black', accent: '#202122', meta: '#202122' },
 	]
 	const viewportThemes = [
 		{ size: '2560x1440', query: window.matchMedia('(min-width: 1440px)') },
@@ -2156,7 +2248,7 @@ function initThemeSwitcher() {
 		themeRequestId = requestId
 		page.dataset.pageTheme = theme.id
 		toggle.dataset.theme = theme.id
-		toggle.style.setProperty('--theme-switcher-accent', theme.accent)
+		toggle.style.color = theme.accent
 		syncBrowserThemeColor(theme)
 		toggle.setAttribute('aria-label', `Zmien wariant tla strony. Aktualnie: ${theme.label}`)
 		toggle.setAttribute('title', `Tlo: ${theme.label}. Kliknij, aby przelaczyc.`)
@@ -2172,7 +2264,6 @@ function initThemeSwitcher() {
 			}
 
 			const backgroundValue = `url("${imageUrl}")`
-			page.style.setProperty('--page-bg-image', backgroundValue)
 			page.style.backgroundImage = backgroundValue
 			clearLayerTransition()
 
@@ -2267,9 +2358,7 @@ function initThemeSwitcher() {
 			return
 		}
 
-		const accentInk = window.getComputedStyle(page).getPropertyValue('--page-accent-ink').trim()
-		const parsedColor = parseColorToHex(accentInk)
-		themeColorMeta.setAttribute('content', parsedColor || theme.accent)
+		themeColorMeta.setAttribute('content', theme.meta || theme.accent)
 	}
 
 	function storeTheme(themeId) {
@@ -2299,39 +2388,4 @@ function initThemeSwitcher() {
 			return ''
 		}
 	}
-}
-
-function parseColorToHex(colorValue) {
-	if (!colorValue) {
-		return ''
-	}
-
-	const normalizedValue = colorValue.trim()
-	if (/^#[\da-f]{6}$/i.test(normalizedValue)) {
-		return normalizedValue
-	}
-
-	if (/^#[\da-f]{3}$/i.test(normalizedValue)) {
-		return `#${normalizedValue
-			.slice(1)
-			.split('')
-			.map(part => `${part}${part}`)
-			.join('')}`
-	}
-
-	const rgbMatch = normalizedValue.match(/^rgba?\(([^)]+)\)$/i)
-	if (!rgbMatch) {
-		return ''
-	}
-
-	const colorChannels = rgbMatch[1]
-		.split(',')
-		.slice(0, 3)
-		.map(channel => Number.parseInt(channel.trim(), 10))
-
-	if (colorChannels.length !== 3 || colorChannels.some(channel => Number.isNaN(channel))) {
-		return ''
-	}
-
-	return `#${colorChannels.map(channel => clamp(channel, 0, 255).toString(16).padStart(2, '0')).join('')}`
 }

@@ -1,0 +1,120 @@
+@use 'sass:map';
+
+$page-themes: (
+	'purple-official': (
+		accent: #b6628f,
+		accent-ink: rgba(126, 65, 98, 0.96),
+		accent-line: rgba(155, 79, 118, 0.88),
+		accent-soft: rgba(182, 98, 143, 0.1),
+		accent-soft-strong: rgba(182, 98, 143, 0.18),
+		accent-focus-border: rgba(126, 65, 98, 0.44),
+		accent-ring: rgba(182, 98, 143, 0.18),
+		accent-glow: rgba(182, 98, 143, 0.24),
+		accent-glow-strong: rgba(182, 98, 143, 0.38),
+		accent-shadow: rgba(182, 98, 143, 0.14),
+	),
+	'blue': (
+		accent: #59a5ef,
+		accent-ink: rgba(31, 86, 142, 0.96),
+		accent-line: rgba(44, 110, 176, 0.88),
+		accent-soft: rgba(89, 165, 239, 0.1),
+		accent-soft-strong: rgba(89, 165, 239, 0.18),
+		accent-focus-border: rgba(31, 86, 142, 0.44),
+		accent-ring: rgba(89, 165, 239, 0.18),
+		accent-glow: rgba(89, 165, 239, 0.26),
+		accent-glow-strong: rgba(89, 165, 239, 0.42),
+		accent-shadow: rgba(89, 165, 239, 0.14),
+	),
+	'green': (
+		accent: #61c784,
+		accent-ink: rgba(34, 108, 62, 0.96),
+		accent-line: rgba(47, 138, 81, 0.88),
+		accent-soft: rgba(97, 199, 132, 0.1),
+		accent-soft-strong: rgba(97, 199, 132, 0.18),
+		accent-focus-border: rgba(34, 108, 62, 0.44),
+		accent-ring: rgba(97, 199, 132, 0.18),
+		accent-glow: rgba(97, 199, 132, 0.24),
+		accent-glow-strong: rgba(97, 199, 132, 0.38),
+		accent-shadow: rgba(97, 199, 132, 0.14),
+	),
+	'black': (
+		accent: #202122,
+		accent-ink: rgba(32, 33, 34, 0.96),
+		accent-line: rgba(32, 33, 34, 0.82),
+		accent-soft: rgba(32, 33, 34, 0.06),
+		accent-soft-strong: rgba(32, 33, 34, 0.12),
+		accent-focus-border: rgba(32, 33, 34, 0.28),
+		accent-ring: rgba(32, 33, 34, 0.12),
+		accent-glow: rgba(216, 220, 231, 0.18),
+		accent-glow-strong: rgba(216, 220, 231, 0.28),
+		accent-shadow: rgba(216, 220, 231, 0.1),
+	),
+);
+
+@function value($theme-name, $token) {
+	$theme: map.get($page-themes, $theme-name);
+
+	@if $theme == null {
+		@return null;
+	}
+
+	@return map.get($theme, $token);
+}
+
+@mixin apply($property, $token) {
+	#{$property}: value('purple-official', $token);
+
+	.page[data-page-theme='purple-official'] & {
+		#{$property}: value('purple-official', $token);
+	}
+
+	@each $theme-name, $theme-values in $page-themes {
+		@if $theme-name != 'purple-official' {
+			.page[data-page-theme='#{$theme-name}'] & {
+				#{$property}: map.get($theme-values, $token);
+			}
+		}
+	}
+}
+
+@mixin apply-self($selector, $property, $token) {
+	#{$selector},
+	#{$selector}[data-page-theme='purple-official'] {
+		#{$property}: value('purple-official', $token);
+	}
+
+	@each $theme-name, $theme-values in $page-themes {
+		@if $theme-name != 'purple-official' {
+			#{$selector}[data-page-theme='#{$theme-name}'] {
+				#{$property}: map.get($theme-values, $token);
+			}
+		}
+	}
+}
+
+@mixin scope($theme-name) {
+	@if $theme-name == 'purple-official' {
+		.page,
+		.page[data-page-theme='purple-official'] {
+			@content;
+		}
+	} @else {
+		.page[data-page-theme='#{$theme-name}'] {
+			@content;
+		}
+	}
+}
+
+@mixin each-scope {
+	@include scope('purple-official') {
+		@content('purple-official');
+	}
+
+	@each $theme-name, $theme-values in $page-themes {
+		@if $theme-name != 'purple-official' {
+			@include scope($theme-name) {
+				@content($theme-name);
+			}
+		}
+	}
+}

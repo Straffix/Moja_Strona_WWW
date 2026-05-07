@@ -28,10 +28,7 @@
 	@media (prefers-reduced-motion: no-preference) {
 		#about-panel.tile-panel.is-open .about-portrait img {
 			animation: aboutPortraitReveal 0.85s ease both;
-			animation-delay: calc(
-				var(--panel-reveal-base-delay) + (var(--panel-reveal-group, 0) * var(--panel-reveal-group-step)) +
-					(var(--panel-reveal-phase, 0) * var(--panel-reveal-phase-step)) + 90ms
-			);
+			animation-delay: 0.74s;
 		}
 	}
 
