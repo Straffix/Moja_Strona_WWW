@@ -37,8 +37,9 @@ try {
 	$email = sanitizeSingleLine((string) ($_POST['email'] ?? ''));
 	$subject = sanitizeSingleLine((string) ($_POST['subject'] ?? ''));
 	$message = sanitizeMessage((string) ($_POST['message'] ?? ''));
+	$isHumanVerified = trim((string) ($_POST['verification'] ?? '')) !== '';
 
-	validateContactPayload($name, $email, $subject, $message);
+	validateContactPayload($name, $email, $subject, $message, $isHumanVerified);
 
 	$attachments = prepareAttachments(
 		normalizeUploadedFiles($_FILES['attachments'] ?? null),
@@ -110,10 +111,14 @@ function validateConfig(array $config): void
 	}
 }
 
-function validateContactPayload(string $name, string $email, string $subject, string $message): void
+function validateContactPayload(string $name, string $email, string $subject, string $message, bool $isHumanVerified): void
 {
 	if ($name === '' || $email === '' || $subject === '' || $message === '') {
 		throw new ValidationException('Uzupełnij wszystkie wymagane pola formularza.');
+	}
+
+	if (!$isHumanVerified) {
+		throw new ValidationException('Potwierdź, że nie jesteś robotem.');
 	}
 
 	if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -121,7 +126,7 @@ function validateContactPayload(string $name, string $email, string $subject, st
 	}
 
 	if (stringLength($name) > 120) {
-		throw new ValidationException('Pole "Imie / Firma" jest za długie.');
+		throw new ValidationException('Pole "Imię / Firma" jest za długie.');
 	}
 
 	if (stringLength($subject) > 160) {
@@ -180,7 +185,7 @@ function prepareAttachments(array $files, array $limits): array
 		}
 
 		if (count($prepared) >= $maxFiles) {
-			throw new ValidationException('Mozesz dołączyć maksymalnie ' . $maxFiles . ' plików.');
+			throw new ValidationException('Możesz dołączyć maksymalnie ' . $maxFiles . ' plików.');
 		}
 
 		$errorCode = (int) ($file['error'] ?? UPLOAD_ERR_NO_FILE);
@@ -203,7 +208,7 @@ function prepareAttachments(array $files, array $limits): array
 
 		$totalSize += $fileSize;
 		if ($totalSize > $maxTotalSize) {
-			throw new ValidationException('Łaczny rozmiar załączników jest zbyt duży.');
+			throw new ValidationException('Łączny rozmiar załączników jest zbyt duży.');
 		}
 
 		if (!is_uploaded_file($tmpName) || !is_readable($tmpName)) {
@@ -347,7 +352,7 @@ function buildPlainTextBody(string $name, string $email, string $subject, string
 	$lines = [
 		'Nowa wiadomość ze strony ArkadiuszLisiecki.pl',
 		'',
-		'Imie / firma: ' . $name,
+		'Imię / firma: ' . $name,
 		'E-mail: ' . $email,
 		'Temat: ' . $subject,
 		'Data: ' . date('Y-m-d H:i:s'),

@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	initPanelScrollNavigation()
 	initPortfolioScrollReveal()
 	initContactPanel()
-	initThemeSwitcherLatest()
+	initThemeSwitcher()
 
 	const backgroundScene = document.querySelector('[data-background-scene]')
 	if (!backgroundScene) {
@@ -77,11 +77,6 @@ function initTaglineRotator() {
 	let timerId = 0
 	let started = false
 	let introObserver = null
-
-	// const writeDelay = 62
-	// const deleteDelay = 18
-	// const phrasePause = 420
-	// const resetPause = 120
 
 	const writeDelay = 50
 	const deleteDelay = 18
@@ -196,272 +191,6 @@ function initTaglineRotator() {
 			start()
 		}
 	})
-}
-
-function initThemeSwitcher() {
-	const page = document.querySelector('.page')
-	const toggle = document.querySelector('[data-theme-toggle]')
-	if (!page || !toggle) {
-		return
-	}
-
-	const baseLayer = document.createElement('div')
-	const incomingLayer = document.createElement('div')
-	baseLayer.className = 'page-theme-layer page-theme-layer--base'
-	incomingLayer.className = 'page-theme-layer page-theme-layer--incoming'
-	baseLayer.setAttribute('aria-hidden', 'true')
-	incomingLayer.setAttribute('aria-hidden', 'true')
-	page.insertBefore(incomingLayer, page.firstChild)
-	page.insertBefore(baseLayer, incomingLayer)
-
-	const storageKey = 'folio-page-theme-v2'
-	const themes = [
-		{
-			id: 'purple-official',
-			label: 'Purple official',
-			accent: '#b6628f',
-		},
-		{
-			id: 'blue',
-			label: 'Blue',
-			accent: '#59a5ef',
-		},
-		{
-			id: 'green',
-			label: 'Green',
-			accent: '#61c784',
-		},
-		{
-			id: 'black',
-			label: 'Black',
-			accent: '#d8dce7',
-		},
-	]
-
-	const viewportThemes = [
-		{
-			size: '2560x1440',
-			query: window.matchMedia('(min-width: 1440px)'),
-		},
-		{
-			size: '1920x1080',
-			query: window.matchMedia('(min-width: 980px)'),
-		},
-		{
-			size: '1280x800',
-			query: window.matchMedia('(min-width: 621px)'),
-		},
-		{
-			size: '768x1024',
-			query: null,
-		},
-	]
-
-	let currentTheme = getStoredTheme()
-
-	const applyTheme = (themeId, persist = true) => {
-		const theme = themes.find(entry => entry.id === themeId) || themes[0]
-		const backgroundSize = getBackgroundSize()
-		const variantSuffix = theme.id === 'purple-official' ? '' : ` ${theme.id}`
-		const imagePath = `img/bg/bg_${backgroundSize}${variantSuffix}.jpg`
-
-		currentTheme = theme.id
-		page.dataset.pageTheme = theme.id
-		page.style.setProperty('--page-bg-image', `url("${imagePath}")`)
-		toggle.dataset.theme = theme.id
-		toggle.style.setProperty('--theme-switcher-accent', theme.accent)
-		toggle.setAttribute('aria-label', `Zmień wariant tła strony. Aktualnie: ${theme.label}`)
-		toggle.setAttribute('title', `Tło: ${theme.label}. Kliknij, aby przełączyć.`)
-
-		toggle.setAttribute('aria-label', `Zmien wariant tla strony. Aktualnie: ${theme.label}`)
-		toggle.setAttribute('title', `Tlo: ${theme.label}. Kliknij, aby przelaczyc.`)
-
-		if (!persist) {
-			return
-		}
-
-		try {
-			window.localStorage.setItem(storageKey, theme.id)
-		} catch (error) {}
-	}
-
-	const handleToggle = () => {
-		const activeIndex = themes.findIndex(theme => theme.id === currentTheme)
-		const nextTheme = themes[(activeIndex + 1 + themes.length) % themes.length]
-		applyTheme(nextTheme.id)
-	}
-
-	toggle.addEventListener('click', handleToggle)
-
-	for (const viewportTheme of viewportThemes) {
-		if (!viewportTheme.query) {
-			continue
-		}
-
-		addMediaQueryListener(viewportTheme.query, () => {
-			applyTheme(currentTheme, false)
-		})
-	}
-
-	applyTheme(currentTheme, false)
-
-	function getStoredTheme() {
-		try {
-			const storedTheme = window.localStorage.getItem(storageKey)
-			if (themes.some(theme => theme.id === storedTheme)) {
-				return storedTheme
-			}
-		} catch (error) {}
-
-		return themes[0].id
-	}
-
-	function getBackgroundSize() {
-		const activeViewport = viewportThemes.find(viewportTheme => viewportTheme.query && viewportTheme.query.matches)
-		return activeViewport ? activeViewport.size : viewportThemes[viewportThemes.length - 1].size
-	}
-}
-
-function initThemeSwitcher() {
-	const page = document.querySelector('.page')
-	const toggle = document.querySelector('[data-theme-toggle]')
-	if (!page || !toggle) {
-		return
-	}
-
-	const storageKey = 'folio-page-theme-v2'
-	const themes = [
-		{ id: 'purple-official', label: 'Purple official', accent: '#b6628f' },
-		{ id: 'blue', label: 'Blue', accent: '#59a5ef' },
-		{ id: 'green', label: 'Green', accent: '#61c784' },
-		{ id: 'black', label: 'Black', accent: '#d8dce7' },
-	]
-	const viewportThemes = [
-		{ size: '2560x1440', query: window.matchMedia('(min-width: 1440px)') },
-		{ size: '1920x1080', query: window.matchMedia('(min-width: 980px)') },
-		{ size: '1280x800', query: window.matchMedia('(min-width: 621px)') },
-		{ size: '768x1024', query: null },
-	]
-
-	let currentTheme = getStoredTheme()
-	let themeRequestId = 0
-	let activeLayerImage = ''
-	let layerTransitionTimerId = 0
-
-	const clearLayerTransition = () => {
-		if (!layerTransitionTimerId) {
-			return
-		}
-
-		window.clearTimeout(layerTransitionTimerId)
-		layerTransitionTimerId = 0
-	}
-
-	const hideIncomingLayer = () => {
-		incomingLayer.classList.remove('is-visible')
-		incomingLayer.style.backgroundImage = ''
-	}
-
-	const applyTheme = (themeId, persist = true) => {
-		const theme = themes.find(entry => entry.id === themeId) || themes[0]
-		const backgroundSize = getBackgroundSize()
-		const variantSuffix = theme.id === 'purple-official' ? '' : ` ${theme.id}`
-		const imageUrl = new URL(`img/bg/bg_${backgroundSize}${variantSuffix}.jpg`, window.location.href).href
-		const requestId = themeRequestId + 1
-
-		currentTheme = theme.id
-		themeRequestId = requestId
-		page.dataset.pageTheme = theme.id
-		toggle.dataset.theme = theme.id
-		toggle.style.setProperty('--theme-switcher-accent', theme.accent)
-		toggle.setAttribute('aria-label', `Zmien wariant tla strony. Aktualnie: ${theme.label}`)
-		toggle.setAttribute('title', `Tlo: ${theme.label}. Kliknij, aby przelaczyc.`)
-
-		const previewImage = new Image()
-		previewImage.onload = () => {
-			if (requestId !== themeRequestId) {
-				return
-			}
-
-			const backgroundValue = `url("${imageUrl}")`
-			page.style.setProperty('--page-bg-image', backgroundValue)
-			page.style.backgroundImage = backgroundValue
-
-			if (!activeLayerImage) {
-				baseLayer.style.backgroundImage = backgroundValue
-				activeLayerImage = backgroundValue
-			} else if (activeLayerImage !== backgroundValue) {
-				incomingLayer.classList.remove('is-visible')
-				incomingLayer.style.backgroundImage = backgroundValue
-				void incomingLayer.offsetWidth
-				incomingLayer.classList.add('is-visible')
-
-				window.setTimeout(() => {
-					if (requestId !== themeRequestId) {
-						return
-					}
-
-					baseLayer.style.backgroundImage = backgroundValue
-					activeLayerImage = backgroundValue
-					incomingLayer.classList.remove('is-visible')
-				}, 820)
-			}
-
-			if (!persist) {
-				return
-			}
-
-			try {
-				window.localStorage.setItem(storageKey, theme.id)
-			} catch (error) {}
-		}
-
-		previewImage.onerror = () => {
-			if (requestId !== themeRequestId) {
-				return
-			}
-
-			if (theme.id !== themes[0].id) {
-				applyTheme(themes[0].id, persist)
-			}
-		}
-
-		previewImage.src = imageUrl
-	}
-
-	toggle.addEventListener('click', () => {
-		const activeIndex = themes.findIndex(theme => theme.id === currentTheme)
-		const nextTheme = themes[(activeIndex + 1 + themes.length) % themes.length]
-		applyTheme(nextTheme.id)
-	})
-
-	for (const viewportTheme of viewportThemes) {
-		if (!viewportTheme.query) {
-			continue
-		}
-
-		addMediaQueryListener(viewportTheme.query, () => {
-			applyTheme(currentTheme, false)
-		})
-	}
-
-	applyTheme(currentTheme, false)
-
-	function getStoredTheme() {
-		try {
-			const storedTheme = window.localStorage.getItem(storageKey)
-			if (themes.some(theme => theme.id === storedTheme)) {
-				return storedTheme
-			}
-		} catch (error) {}
-
-		return themes[0].id
-	}
-
-	function getBackgroundSize() {
-		const activeViewport = viewportThemes.find(viewportTheme => viewportTheme.query && viewportTheme.query.matches)
-		return activeViewport ? activeViewport.size : viewportThemes[viewportThemes.length - 1].size
-	}
 }
 
 function initSiteIntro() {
@@ -1817,7 +1546,7 @@ function initContactPanel() {
 		return
 	}
 
-	const fileInput = form.querySelector('input[name="attachments"]')
+	const fileInput = form.querySelector('input[type="file"][name="attachments[]"], input[type="file"][name="attachments"]')
 	const fileLabel = form.querySelector('[data-file-label]')
 	const submitButton = form.querySelector('.contact-form__submit')
 	const submitButtonText = submitButton ? submitButton.querySelector('span') : null
@@ -2361,7 +2090,7 @@ function clamp(value, min, max) {
 	return Math.min(Math.max(value, min), max)
 }
 
-function initThemeSwitcherLatest() {
+function initThemeSwitcher() {
 	const page = document.querySelector('.page')
 	const toggle = document.querySelector('[data-theme-toggle]')
 	if (!page || !toggle) {
