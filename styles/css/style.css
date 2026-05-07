@@ -2251,7 +2251,6 @@ a {
   width: fit-content;
   padding: 0.18rem 0.58rem 0.18rem 0.72rem;
   border-left: 2px solid var(--page-accent-line);
-  background: var(--page-accent-soft);
   margin: 0;
   color: var(--page-accent-ink);
   font-size: 1.05rem;
@@ -2357,8 +2356,6 @@ a {
   min-width: 0;
   padding: clamp(1.4rem, 2vw, 2.2rem);
   overflow: hidden;
-  border: 1px solid rgba(0, 0, 0, 0.14);
-  background: linear-gradient(160deg, var(--page-accent-soft) 0%, rgba(255, 255, 255, 0.94) 22%, rgba(0, 0, 0, 0.025) 100%);
   transition: transform 0.28s ease, border-color 0.28s ease, background 0.28s ease, box-shadow 0.28s ease;
 }
 
@@ -2368,13 +2365,6 @@ a {
   inset: 0 auto 0 0;
   width: 0.28rem;
   background: linear-gradient(180deg, var(--page-accent-line), transparent 88%);
-}
-
-.about-card:hover {
-  transform: translateY(-0.18rem);
-  border-color: var(--page-accent-line);
-  background: linear-gradient(160deg, var(--page-accent-soft-strong) 0%, rgba(255, 255, 255, 0.96) 24%, rgba(0, 0, 0, 0.03) 100%);
-  box-shadow: 0 1.4rem 3rem var(--page-accent-shadow);
 }
 
 .about-card h3 {
@@ -2463,6 +2453,7 @@ a {
   border: 0;
   background: rgba(0, 0, 0, 0.018);
   transition: background-color 0.28s ease, transform 0.28s ease;
+  margin-top: 50px;
 }
 
 .about-hobby__item:hover {
