@@ -264,7 +264,7 @@ a {
 .ambient {
 	position: absolute;
 	display: none;
-	border-radius: 999px;
+	border-radius: 50%;
 	filter: blur(70px);
 	opacity: 0.42;
 
@@ -320,7 +320,7 @@ a {
 .road {
 	position: absolute;
 	height: 4px;
-	border-radius: 999px;
+	border-radius: 50%;
 	background: linear-gradient(
 		90deg,
 		transparent,
@@ -465,7 +465,7 @@ a {
 
 .light-cluster {
 	position: absolute;
-	border-radius: 999px;
+	border-radius: 50%;
 	filter: blur(26px);
 	opacity: 0.46;
 	mix-blend-mode: screen;
@@ -612,11 +612,11 @@ a {
 	display: none;
 	flex-direction: column;
 	align-items: center;
-	gap: 0.72rem;
+	gap: 0.84rem;
 	width: min(clamp(13.2rem, 15vw, 15.6rem), calc((100% - 2.5rem) / 6));
 	color: colors.alpha(colors.$white, 0.74);
 	text-align: center;
-	transform-origin: bottom right;
+	transform-origin: bottom center;
 	transition:
 		opacity 0.46s ease,
 		transform 0.72s cubic-bezier(0.22, 1, 0.36, 1),
@@ -636,11 +636,11 @@ a {
 		display: flex;
 		justify-content: center;
 		flex-wrap: wrap;
-		gap: 0.55rem;
+		gap: 0.62rem;
 		width: 100%;
 		margin: 0;
-		padding-top: 0.78rem;
-		border-top: 1px solid colors.alpha(colors.$white, 0.18);
+		padding-top: 0;
+		border-top: none;
 	}
 
 	&__social-link {
@@ -649,9 +649,8 @@ a {
 		justify-content: center;
 		width: 2.2rem;
 		height: 2.2rem;
-		border: 1px solid colors.alpha(colors.$white, 0.18);
-		border-radius: 999px;
-		background: colors.alpha(colors.$black, 0.18);
+		border-radius: 50%;
+		background-color: #ffffff52;
 		color: colors.alpha(colors.$white, 0.88);
 		box-shadow:
 			0 0 0 1px colors.alpha(colors.$white, 0.04),
@@ -690,13 +689,13 @@ a {
 	&__copy {
 		width: 100%;
 		margin: 0;
-		padding-top: 0.74rem;
-		border-top: 1px solid colors.alpha(colors.$white, 0.14);
+		padding-top: 0;
+		border-top: none;
 		color: colors.alpha(colors.$white, 0.72);
-		font-size: 0.92rem;
+		font-size: 0.98rem;
 		font-weight: 500;
 		line-height: 1.5;
-		letter-spacing: 0.09em;
+		letter-spacing: 0.11em;
 		text-transform: uppercase;
 		text-wrap: balance;
 	}
@@ -764,7 +763,7 @@ a {
 	width: 2.8rem;
 	height: 2.8rem;
 	border: 1px solid rgba(214, 220, 228, 0.96);
-	border-radius: 999px;
+	border-radius: 50%;
 	background: rgba(219, 224, 231, 0.884);
 	box-shadow:
 		0 0.35rem 1.2rem colors.alpha(colors.$black, 0.18),
@@ -1105,7 +1104,7 @@ a {
 		appearance: none;
 		-webkit-appearance: none;
 		border: 1px solid colors.alpha(colors.$white, 0.18);
-		border-radius: 999px;
+		border-radius: 50%;
 		background: colors.alpha(colors.$black, 0.24);
 		color: inherit;
 		box-shadow: 0 0 0 1px colors.alpha(colors.$white, 0.04);
@@ -1162,7 +1161,7 @@ a {
 			span {
 				width: 0.27rem;
 				height: 0.94rem;
-				border-radius: 999px;
+				border-radius: 50%;
 				background: currentColor;
 			}
 		}
@@ -1883,7 +1882,7 @@ a {
 	width: clamp(3rem, 3.8vw, 3.4rem);
 	height: clamp(3rem, 3.8vw, 3.4rem);
 	border: 1px solid colors.alpha(colors.$black, 0.1);
-	border-radius: 999px;
+	border-radius: 50%;
 	background: colors.alpha(colors.$white, 0.84);
 	box-shadow: 0 0.9rem 2rem colors.alpha(colors.$black, 0.08);
 	opacity: 0;
@@ -2724,7 +2723,7 @@ a {
 	height: clamp(3.8rem, 4.6vw, 5.8rem);
 	padding: clamp(0.48rem, 0.8vw, 0.72rem);
 	border: 1px solid rgba(155, 79, 118, 0.88);
-	border-radius: 999px;
+	border-radius: 50%;
 	background: linear-gradient(180deg, colors.alpha(colors.$white, 0.98), rgba(182, 98, 143, 0.1));
 	box-shadow: 0 0.9rem 2rem rgba(182, 98, 143, 0.14);
 	color: rgba(126, 65, 98, 0.96);
