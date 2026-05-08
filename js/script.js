@@ -3,6 +3,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 	document.documentElement.classList.add('has-js')
 
+	initSiteFooter()
 	initTaglineRotator()
 	initSiteIntro()
 	enhanceProjectMockups()
@@ -24,6 +25,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 	initNetworkCanvas(backgroundScene)
 })
+
+function initSiteFooter() {
+	const yearTargets = document.querySelectorAll('[data-current-year]')
+	if (!yearTargets.length) {
+		return
+	}
+
+	const currentYear = String(new Date().getFullYear())
+
+	for (const target of yearTargets) {
+		target.textContent = currentYear
+	}
+}
 
 function enhanceProjectMockups(root = document) {
 	const screens = root.querySelectorAll('.project-demo__frame--top .project-demo__screen, .project-demo__frame--bottom .project-demo__screen')
@@ -770,14 +784,24 @@ function initPanelScrollNavigation() {
 			})
 		}
 
+		const getStaticOffsetTop = element => {
+			let top = 0
+			let current = element
+
+			while (current instanceof HTMLElement) {
+				top += current.offsetTop
+				current = current.offsetParent
+			}
+
+			return top
+		}
+
 		const getTargetScrollTop = target => {
 			if (!(target instanceof HTMLElement)) {
 				return scrollRoot.clientHeight
 			}
 
-			const scrollRootRect = scrollRoot.getBoundingClientRect()
-			const targetRect = target.getBoundingClientRect()
-			return scrollRoot.scrollTop + (targetRect.top - scrollRootRect.top)
+			return Math.max(getStaticOffsetTop(target) - getStaticOffsetTop(scrollRoot), 0)
 		}
 
 		const syncButtons = () => {

@@ -45,6 +45,12 @@
 			text-align: left;
 		}
 
+		.site-footer {
+			right: clamp(1rem, 1.45vw, 1.6rem);
+			bottom: clamp(1rem, 1.55vw, 1.45rem);
+			display: flex;
+		}
+
 		.tile {
 			gap: clamp(0.8rem, 0.9vw, 1rem);
 			padding: clamp(1.2rem, 1.6vw, 1.8rem);
@@ -162,6 +168,12 @@
 		.top-actions {
 			top: 2rem;
 			right: 2.2rem;
+		}
+
+		.site-footer {
+			right: clamp(1.35rem, 1.6vw, 2rem);
+			bottom: clamp(1.2rem, 1.55vw, 1.6rem);
+			width: min(clamp(13.8rem, 14.5vw, 16rem), calc((100% - 2.5rem) / 6));
 		}
 
 		.brand {

@@ -656,36 +656,46 @@
 		}
 
 		.project-demo {
-			transform: translateY(-3.8rem);
+			transform: translateY(-2.2rem);
 		}
 
 		.tiles {
-			height: min(62svh, 48rem);
-			grid-template-rows: 1.68fr repeat(3, 0.8fr);
+			height: min(64svh, 49rem);
+			grid-template-rows: 1.84fr repeat(3, 0.74fr);
 		}
 
 		.project-slide {
-			padding: 0.46rem;
+			align-items: center;
+			padding: 0.5rem;
 		}
 
 		.project-demo {
-			grid-template-columns: minmax(0, 1fr) minmax(6.8rem, 0.62fr);
-			gap: 0.5rem;
-			padding: 0.56rem;
+			grid-template-columns: minmax(0, 1fr);
+			grid-template-rows: auto auto;
+			justify-items: center;
+			gap: 0.52rem;
+			padding: 0.58rem 0.5rem 0.34rem;
 		}
 
 		.project-demo__collage {
-			width: 92%;
-			transform: translateY(-2%);
+			width: min(100%, 22.2rem);
+			margin-inline: auto;
+			transform: translate3d(4%, 0, 0);
 		}
 
 		.project-demo__caption {
+			justify-items: center;
 			gap: 0.14rem;
 			padding: 0;
+			text-align: center;
 		}
 
 		.project-demo__caption strong {
 			font-size: clamp(1.08rem, 2.5vw, 1.32rem);
+		}
+
+		.project-demo__tags {
+			justify-content: center;
 		}
 
 		.project-demo__tags span {
@@ -714,7 +724,8 @@
 
 		.project-demo__collage {
 			width: min(100%, 21rem);
-			transform: translateY(0);
+			margin-inline: auto;
+			transform: translate3d(4%, 0, 0);
 		}
 
 		.project-demo__caption {
@@ -830,5 +841,4 @@
 		}
 	}
 }
-
 
