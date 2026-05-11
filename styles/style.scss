@@ -1841,22 +1841,29 @@ a {
 .panel-scroll-cta {
 	position: absolute;
 	left: 50%;
-	bottom: clamp(1rem, 2.6vh, 2rem);
+	bottom: clamp(1.2rem, 3vh, 2.25rem);
 	z-index: 4;
-	width: clamp(3rem, 4.5vw, 4rem);
-	height: clamp(3rem, 4.5vw, 4rem);
+	width: clamp(3.35rem, 4.8vw, 4.2rem);
+	height: clamp(3.35rem, 4.8vw, 4.2rem);
+	border: 1px solid colors.alpha(colors.$black, 0.12);
+	border-radius: 50%;
+	background: colors.alpha(colors.$white, 0.9);
+	box-shadow: 0 0.9rem 2rem colors.alpha(colors.$black, 0.08);
 	transform: translate3d(-50%, 0, 0);
 	animation: panelScrollCtaPulse 1.85s ease-in-out infinite;
 }
 
 .panel-scroll-cta svg {
-	width: clamp(2.35rem, 3vw, 2.8rem);
-	height: clamp(2.35rem, 3vw, 2.8rem);
+	width: clamp(1.55rem, 2.2vw, 1.9rem);
+	height: clamp(1.55rem, 2.2vw, 1.9rem);
 }
 
 .panel-scroll-cta:hover,
 .panel-scroll-cta:focus-visible {
+	@include page-themes.apply(border-color, accent-line);
 	@include page-themes.apply(color, accent-ink);
+	background: colors.alpha(colors.$white, 0.97);
+	box-shadow: 0 1.1rem 2.4rem page-themes.value('purple-official', accent-shadow);
 	opacity: 1;
 	animation-play-state: paused;
 }
@@ -1876,23 +1883,23 @@ a {
 
 .panel-scroll-top {
 	position: absolute;
-	right: clamp(1rem, 2vw, 2rem);
-	bottom: clamp(1rem, 2.2vh, 2rem);
+	right: clamp(1.35rem, 2.6vw, 2.35rem);
+	bottom: clamp(1.35rem, 2.8vh, 2.35rem);
 	z-index: 5;
-	width: clamp(3rem, 3.8vw, 3.4rem);
-	height: clamp(3rem, 3.8vw, 3.4rem);
+	width: clamp(3.35rem, 4.2vw, 3.9rem);
+	height: clamp(3.35rem, 4.2vw, 3.9rem);
 	border: 1px solid colors.alpha(colors.$black, 0.1);
 	border-radius: 50%;
-	background: colors.alpha(colors.$white, 0.84);
-	box-shadow: 0 0.9rem 2rem colors.alpha(colors.$black, 0.08);
+	background: colors.alpha(colors.$white, 0.88);
+	box-shadow: 0 1rem 2.15rem colors.alpha(colors.$black, 0.1);
 	opacity: 0;
 	pointer-events: none;
 	transform: translate3d(0, 0.8rem, 0);
 }
 
 .panel-scroll-top svg {
-	width: 1.5rem;
-	height: 1.5rem;
+	width: 1.75rem;
+	height: 1.75rem;
 	transform: rotate(180deg);
 }
 
@@ -3618,15 +3625,17 @@ a {
 	align-items: center;
 	justify-content: center;
 	gap: clamp(0.6rem, 1vw, 1rem);
+	--stack-item-accent: #{colors.alpha(colors.$blue-soft, 0.7)};
+	--stack-item-border: #{colors.alpha(colors.$black, 0.06)};
 	min-height: clamp(9.8rem, 13vh, 13.6rem);
 	overflow: hidden;
 	padding: clamp(1rem, 1.4vw, 1.8rem);
 	color: colors.alpha(colors.$black, 0.5);
 	text-align: center;
 	transition:
-		background-color 0.28s cubic-bezier(0.22, 1, 0.36, 1),
-		color 0.28s ease,
-		transform 0.36s cubic-bezier(0.22, 1, 0.36, 1);
+		background-color 0.16s ease-out,
+		color 0.16s ease-out,
+		transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .stack-panel__item::after {
@@ -3635,129 +3644,138 @@ a {
 	inset: 0;
 	border: 1px solid colors.alpha(colors.$white, 0);
 	pointer-events: none;
-	transition: border-color 0.28s ease;
+	transition: border-color 0.16s ease-out;
 }
 
 .stack-panel__item:hover,
-.stack-panel__item:focus-visible {
-	background-color: colors.alpha(colors.$blue-soft, 0.7);
+.stack-panel__item:focus-visible,
+.stack-panel__item.is-hover-active {
+	background-color: var(--stack-item-accent);
 	color: colors.alpha(colors.$black, 0.72);
 	transform: translateY(-0.2rem);
+	transition:
+		background-color 0.02s linear,
+		color 0.12s ease,
+		transform 0.22s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.stack-panel__item--html:hover,
-.stack-panel__item--html:focus-visible {
-	background-color: #ff8a4c;
+.stack-panel__item.is-hover-trail {
+	background-color: var(--stack-item-accent);
+	color: colors.alpha(colors.$black, 0.64);
 }
 
-.stack-panel__item--css:hover,
-.stack-panel__item--css:focus-visible {
-	background-color: #aeea72;
+.stack-panel__item--html {
+	--stack-item-accent: #ff8a4c;
 }
 
-.stack-panel__item--javascript:hover,
-.stack-panel__item--javascript:focus-visible {
-	background-color: #f8d84a;
+.stack-panel__item--css {
+	--stack-item-accent: #aeea72;
 }
 
-.stack-panel__item--scss:hover,
-.stack-panel__item--scss:focus-visible {
-	background-color: #f08ac0;
+.stack-panel__item--javascript {
+	--stack-item-accent: #f8d84a;
 }
 
-.stack-panel__item--bootstrap:hover,
-.stack-panel__item--bootstrap:focus-visible {
-	background-color: #85d7ff;
+.stack-panel__item--scss {
+	--stack-item-accent: #f08ac0;
 }
 
-.stack-panel__item--wordpress:hover,
-.stack-panel__item--wordpress:focus-visible {
-	background-color: #8ed6ff;
+.stack-panel__item--bootstrap {
+	--stack-item-accent: #85d7ff;
 }
 
-.stack-panel__item--git:hover,
-.stack-panel__item--git:focus-visible {
-	background-color: #ffb86b;
+.stack-panel__item--wordpress {
+	--stack-item-accent: #8ed6ff;
 }
 
-.stack-panel__item--responsive:hover,
-.stack-panel__item--responsive:focus-visible {
-	background-color: #b8e986;
+.stack-panel__item--git {
+	--stack-item-accent: #ffb86b;
 }
 
-.stack-panel__item--seo:hover,
-.stack-panel__item--seo:focus-visible {
-	background-color: #d6c6ff;
+.stack-panel__item--responsive {
+	--stack-item-accent: #b8e986;
 }
 
-.stack-panel__item--interface:hover,
-.stack-panel__item--interface:focus-visible {
-	background-color: #9ee6d6;
+.stack-panel__item--seo {
+	--stack-item-accent: #d6c6ff;
 }
 
-.stack-panel__item--figma:hover,
-.stack-panel__item--figma:focus-visible {
-	background-color: #ff9fda;
+.stack-panel__item--interface {
+	--stack-item-accent: #9ee6d6;
 }
 
-.stack-panel__item--photoshop:hover,
-.stack-panel__item--photoshop:focus-visible {
-	background-color: #b8d9ff;
+.stack-panel__item--figma {
+	--stack-item-accent: #ff9fda;
 }
 
-.stack-panel__item--illustrator:hover,
-.stack-panel__item--illustrator:focus-visible {
-	background-color: #ffd36e;
+.stack-panel__item--photoshop {
+	--stack-item-accent: #b8d9ff;
 }
 
-.stack-panel__item--after-effects:hover,
-.stack-panel__item--after-effects:focus-visible {
-	background-color: #c8b6ff;
+.stack-panel__item--illustrator {
+	--stack-item-accent: #ffd36e;
 }
 
-.stack-panel__item--logic-pro:hover,
-.stack-panel__item--logic-pro:focus-visible {
-	background-color: #ffb4a2;
+.stack-panel__item--after-effects {
+	--stack-item-accent: #c8b6ff;
 }
 
-.stack-panel__item--chatgpt:hover,
-.stack-panel__item--chatgpt:focus-visible {
-	background-color: #7ee2b8;
+.stack-panel__item--logic-pro {
+	--stack-item-accent: #ffb4a2;
 }
 
-.stack-panel__item--codex:hover,
-.stack-panel__item--codex:focus-visible {
-	background-color: #9cc9ff;
+.stack-panel__item--chatgpt {
+	--stack-item-accent: #7ee2b8;
 }
 
-.stack-panel__item--react:hover,
-.stack-panel__item--react:focus-visible {
-	background-color: #7dd3fc;
+.stack-panel__item--codex {
+	--stack-item-accent: #9cc9ff;
 }
 
-.stack-panel__item--typescript:hover,
-.stack-panel__item--typescript:focus-visible {
-	background-color: #8bd3ff;
+.stack-panel__item--react {
+	--stack-item-accent: #7dd3fc;
 }
 
-.stack-panel__item--nodejs:hover,
-.stack-panel__item--nodejs:focus-visible {
-	background-color: #98e58e;
+.stack-panel__item--typescript {
+	--stack-item-accent: #8bd3ff;
+}
+
+.stack-panel__item--nodejs {
+	--stack-item-accent: #98e58e;
 }
 
 .stack-panel__item:hover::after,
-.stack-panel__item:focus-visible::after {
-	border-color: colors.alpha(colors.$black, 0.06);
+.stack-panel__item:focus-visible::after,
+.stack-panel__item.is-hover-active::after,
+.stack-panel__item.is-hover-trail::after {
+	border-color: var(--stack-item-border);
 }
 
 #stack-panel.tile-panel.is-open .stack-panel__item:hover,
 #stack-panel.tile-panel.is-open .stack-panel__item:focus-visible,
+#stack-panel.tile-panel.is-open .stack-panel__item.is-hover-active,
+#stack-panel.tile-panel.is-open .stack-panel__item.is-hover-trail {
+	transition-delay: 0s !important;
+}
+
+#stack-panel.tile-panel.is-open .stack-panel__item:hover,
+#stack-panel.tile-panel.is-open .stack-panel__item:focus-visible,
+#stack-panel.tile-panel.is-open .stack-panel__item.is-hover-active {
+	transform: translateY(-0.2rem);
+}
+
 #stack-panel.tile-panel.is-open .stack-panel__item:hover::after,
 #stack-panel.tile-panel.is-open .stack-panel__item:focus-visible::after,
+#stack-panel.tile-panel.is-open .stack-panel__item.is-hover-active::after,
+#stack-panel.tile-panel.is-open .stack-panel__item.is-hover-trail::after,
 #stack-panel.tile-panel.is-open .stack-panel__item:hover .stack-panel__logo,
 #stack-panel.tile-panel.is-open .stack-panel__item:focus-visible .stack-panel__logo,
+#stack-panel.tile-panel.is-open .stack-panel__item.is-hover-active .stack-panel__logo,
+#stack-panel.tile-panel.is-open .stack-panel__item.is-hover-trail .stack-panel__logo,
 #stack-panel.tile-panel.is-open .stack-panel__item:hover .stack-panel__name,
-#stack-panel.tile-panel.is-open .stack-panel__item:focus-visible .stack-panel__name {
+#stack-panel.tile-panel.is-open .stack-panel__item:focus-visible .stack-panel__name,
+#stack-panel.tile-panel.is-open .stack-panel__item.is-hover-active .stack-panel__name,
+#stack-panel.tile-panel.is-open .stack-panel__item.is-hover-trail .stack-panel__name {
 	transition-delay: 0s;
 }
 
@@ -3775,9 +3793,14 @@ a {
 }
 
 .stack-panel__item:hover .stack-panel__logo,
-.stack-panel__item:focus-visible .stack-panel__logo {
+.stack-panel__item:focus-visible .stack-panel__logo,
+.stack-panel__item.is-hover-active .stack-panel__logo {
 	opacity: 0.86;
 	transform: scale(1.05);
+}
+
+.stack-panel__item.is-hover-trail .stack-panel__logo {
+	opacity: 0.82;
 }
 
 .stack-panel__name {
@@ -3796,8 +3819,13 @@ a {
 }
 
 .stack-panel__item:hover .stack-panel__name,
-.stack-panel__item:focus-visible .stack-panel__name {
+.stack-panel__item:focus-visible .stack-panel__name,
+.stack-panel__item.is-hover-active .stack-panel__name {
 	opacity: 0.92;
+}
+
+.stack-panel__item.is-hover-trail .stack-panel__name {
+	opacity: 0.84;
 }
 
 @include page-themes.each-scope using ($theme-name) {
@@ -3845,7 +3873,9 @@ a {
 
 	.panel-scroll-cta:hover,
 	.panel-scroll-cta:focus-visible {
+		border-color: $line;
 		color: $ink;
+		box-shadow: 0 1.1rem 2.4rem $shadow;
 	}
 
 	.panel-scroll-top:hover,

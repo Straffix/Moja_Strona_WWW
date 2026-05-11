@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 	initProjectSliders()
 	initExpandingPanels()
 	initPanelScrollNavigation()
+	initStackPanelHoverTrail()
 	initPortfolioScrollReveal()
 	initContactPanel()
 	initThemeSwitcher()
@@ -863,6 +864,104 @@ function initPanelScrollNavigation() {
 		addMediaQueryListener(reduceMotionQuery, scheduleSync)
 		syncButtons()
 	}
+}
+
+function initStackPanelHoverTrail() {
+	const stackPanel = document.getElementById('stack-panel')
+	if (!stackPanel) {
+		return
+	}
+
+	const items = Array.from(stackPanel.querySelectorAll('.stack-panel__item'))
+	if (!items.length) {
+		return
+	}
+
+	const hoverQuery = window.matchMedia('(hover: hover) and (pointer: fine)')
+	const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
+	const trailHoldMs = 140
+	const trailTimers = new WeakMap()
+
+	const clearInteractiveDelay = item => {
+		item.style.transitionDelay = '0s, 0s, 0s'
+	}
+
+	const clearTrailTimer = item => {
+		const timerId = trailTimers.get(item)
+		if (!timerId) {
+			return
+		}
+
+		window.clearTimeout(timerId)
+		trailTimers.delete(item)
+	}
+
+	const resetItemState = item => {
+		clearTrailTimer(item)
+		item.classList.remove('is-hover-active', 'is-hover-trail')
+	}
+
+	const activateItem = item => {
+		clearInteractiveDelay(item)
+		clearTrailTimer(item)
+		item.classList.remove('is-hover-trail')
+		item.classList.add('is-hover-active')
+	}
+
+	const releaseItem = item => {
+		clearInteractiveDelay(item)
+		item.classList.remove('is-hover-active')
+		clearTrailTimer(item)
+
+		if (reduceMotionQuery.matches) {
+			item.classList.remove('is-hover-trail')
+			return
+		}
+
+		item.classList.add('is-hover-trail')
+
+		const timerId = window.setTimeout(() => {
+			item.classList.remove('is-hover-trail')
+			trailTimers.delete(item)
+		}, trailHoldMs)
+
+		trailTimers.set(item, timerId)
+	}
+
+	const resetAllStates = () => {
+		items.forEach(resetItemState)
+	}
+
+	items.forEach(item => {
+		item.addEventListener('mouseenter', () => {
+			if (!hoverQuery.matches) {
+				return
+			}
+
+			activateItem(item)
+		})
+
+		item.addEventListener('mouseleave', () => {
+			if (!hoverQuery.matches) {
+				resetItemState(item)
+				return
+			}
+
+			releaseItem(item)
+		})
+	})
+
+	addMediaQueryListener(hoverQuery, event => {
+		if (!event.matches) {
+			resetAllStates()
+		}
+	})
+
+	addMediaQueryListener(reduceMotionQuery, () => {
+		resetAllStates()
+	})
+
+	stackPanel.addEventListener('tilepanel:closed', resetAllStates)
 }
 
 function initPortfolioScrollReveal() {
