@@ -2080,6 +2080,10 @@ function initNetworkCanvas(backgroundScene) {
 	}
 
 	function getStrategicRegion() {
+		if (getActivePageTheme() === 'white') {
+			return null
+		}
+
 		if (!strategicTile) {
 			return null
 		}
@@ -2229,6 +2233,8 @@ function setNextPointShift(point, now, seed) {
 }
 
 function drawNetwork(context, points, target) {
+	const tone = getNetworkTone()
+
 	for (const point of points) {
 		const distance = Math.abs(getDistance(target, point))
 
@@ -2246,12 +2252,12 @@ function drawNetwork(context, points, target) {
 			point.circleActive = 0
 		}
 
-		drawLines(context, point)
-		drawCircle(context, point)
+		drawLines(context, point, tone)
+		drawCircle(context, point, tone)
 	}
 }
 
-function drawLines(context, point) {
+function drawLines(context, point, tone) {
 	if (!point.active) {
 		return
 	}
@@ -2264,20 +2270,42 @@ function drawLines(context, point) {
 		context.beginPath()
 		context.moveTo(point.x, point.y)
 		context.lineTo(closestPoint.x, closestPoint.y)
-		context.strokeStyle = `rgba(255, 255, 255, ${point.active})`
+		context.strokeStyle = `rgba(${tone.rgb}, ${Math.min(point.active * tone.lineOpacity, 1)})`
 		context.stroke()
 	}
 }
 
-function drawCircle(context, point) {
+function drawCircle(context, point, tone) {
 	if (!point.circleActive) {
 		return
 	}
 
 	context.beginPath()
 	context.arc(point.x, point.y, point.radius, 0, Math.PI * 2, false)
-	context.fillStyle = `rgba(255, 255, 255, ${point.circleActive})`
+	context.fillStyle = `rgba(${tone.rgb}, ${Math.min(point.circleActive * tone.circleOpacity, 1)})`
 	context.fill()
+}
+
+function getActivePageTheme() {
+	return document.querySelector('.page')?.dataset.pageTheme || 'white'
+}
+
+function getNetworkTone() {
+	const activeTheme = getActivePageTheme()
+
+	if (activeTheme === 'white') {
+		return {
+			rgb: '154, 136, 255',
+			lineOpacity: 0.48,
+			circleOpacity: 0.6,
+		}
+	}
+
+	return {
+		rgb: '255, 255, 255',
+		lineOpacity: 1,
+		circleOpacity: 1,
+	}
 }
 
 function getDistance(pointA, pointB) {
@@ -2326,13 +2354,11 @@ function initThemeSwitcher() {
 	page.insertBefore(incomingLayer, insertTarget)
 	page.insertBefore(baseLayer, incomingLayer)
 
-	const storageKey = 'folio-page-theme-v3'
-	const legacyStorageKey = 'folio-page-theme-v2'
+	const storageKey = 'folio-page-theme-v5'
 	const themes = [
-		{ id: 'purple-official', label: 'Purple official', accent: '#b6628f', meta: '#7e4162' },
-		{ id: 'blue', label: 'Blue', accent: '#59a5ef', meta: '#1f568e' },
-		{ id: 'green', label: 'Green', accent: '#61c784', meta: '#226c3e' },
-		{ id: 'black', label: 'Black', accent: '#202122', meta: '#202122' },
+		{ id: 'white', label: 'White', accent: '#5f7286', meta: '#ffffff', backgroundVariant: '' },
+		{ id: 'blue', label: 'Blue', accent: '#59a5ef', meta: '#1f568e', backgroundVariant: 'blue' },
+		{ id: 'black', label: 'Black', accent: '#202122', meta: '#202122', backgroundVariant: 'black' },
 	]
 	const viewportThemes = [
 		{ size: '2560x1440', query: window.matchMedia('(min-width: 1440px)') },
@@ -2363,13 +2389,17 @@ function initThemeSwitcher() {
 	const applyTheme = (themeId, persist = true) => {
 		const theme = themes.find(entry => entry.id === themeId) || themes[0]
 		const backgroundSize = getBackgroundSize()
-		const variantSuffix = theme.id === 'purple-official' ? '' : ` ${theme.id}`
+		const variantSuffix = theme.backgroundVariant ? ` ${theme.backgroundVariant}` : ''
 		const imageUrl = new URL(`img/bg/bg_${backgroundSize}${variantSuffix}.jpg`, window.location.href).href
 		const requestId = themeRequestId + 1
 
 		currentTheme = theme.id
 		themeRequestId = requestId
 		page.dataset.pageTheme = theme.id
+		document.documentElement.dataset.pageTheme = theme.id
+		if (document.body) {
+			document.body.dataset.pageTheme = theme.id
+		}
 		toggle.dataset.theme = theme.id
 		toggle.style.color = theme.accent
 		syncBrowserThemeColor(theme)
@@ -2380,6 +2410,16 @@ function initThemeSwitcher() {
 			storeTheme(theme.id)
 		}
 
+		clearLayerTransition()
+
+		if (theme.id === 'white') {
+			page.style.backgroundImage = 'none'
+			baseLayer.style.backgroundImage = ''
+			activeLayerImage = ''
+			hideIncomingLayer()
+			return
+		}
+
 		const previewImage = new Image()
 		previewImage.onload = () => {
 			if (requestId !== themeRequestId) {
@@ -2388,8 +2428,6 @@ function initThemeSwitcher() {
 
 			const backgroundValue = `url("${imageUrl}")`
 			page.style.backgroundImage = backgroundValue
-			clearLayerTransition()
-
 			if (!activeLayerImage) {
 				baseLayer.style.backgroundImage = backgroundValue
 				activeLayerImage = backgroundValue
@@ -2455,16 +2493,8 @@ function initThemeSwitcher() {
 	applyTheme(currentTheme, false)
 
 	function getStoredTheme() {
-		for (const key of [storageKey, legacyStorageKey]) {
-			const storedTheme = getLocalStorageTheme(key) || getCookieTheme(key)
-			if (!themes.some(theme => theme.id === storedTheme)) {
-				continue
-			}
-
-			if (key !== storageKey) {
-				storeTheme(storedTheme)
-			}
-
+		const storedTheme = getLocalStorageTheme(storageKey) || getCookieTheme(storageKey)
+		if (themes.some(theme => theme.id === storedTheme)) {
 			return storedTheme
 		}
 

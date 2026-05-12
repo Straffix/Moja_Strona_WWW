@@ -1,18 +1,8 @@
 @use 'sass:map';
 
+$default-theme-name: 'blue';
+
 $page-themes: (
-	'purple-official': (
-		accent: #b6628f,
-		accent-ink: rgba(126, 65, 98, 0.96),
-		accent-line: rgba(155, 79, 118, 0.88),
-		accent-soft: rgba(182, 98, 143, 0.1),
-		accent-soft-strong: rgba(182, 98, 143, 0.18),
-		accent-focus-border: rgba(126, 65, 98, 0.44),
-		accent-ring: rgba(182, 98, 143, 0.18),
-		accent-glow: rgba(182, 98, 143, 0.24),
-		accent-glow-strong: rgba(182, 98, 143, 0.38),
-		accent-shadow: rgba(182, 98, 143, 0.14),
-	),
 	'blue': (
 		accent: #59a5ef,
 		accent-ink: rgba(31, 86, 142, 0.96),
@@ -25,18 +15,6 @@ $page-themes: (
 		accent-glow-strong: rgba(89, 165, 239, 0.42),
 		accent-shadow: rgba(89, 165, 239, 0.14),
 	),
-	'green': (
-		accent: #61c784,
-		accent-ink: rgba(34, 108, 62, 0.96),
-		accent-line: rgba(47, 138, 81, 0.88),
-		accent-soft: rgba(97, 199, 132, 0.1),
-		accent-soft-strong: rgba(97, 199, 132, 0.18),
-		accent-focus-border: rgba(34, 108, 62, 0.44),
-		accent-ring: rgba(97, 199, 132, 0.18),
-		accent-glow: rgba(97, 199, 132, 0.24),
-		accent-glow-strong: rgba(97, 199, 132, 0.38),
-		accent-shadow: rgba(97, 199, 132, 0.14),
-	),
 	'black': (
 		accent: #202122,
 		accent-ink: rgba(32, 33, 34, 0.96),
@@ -48,6 +26,18 @@ $page-themes: (
 		accent-glow: rgba(216, 220, 231, 0.18),
 		accent-glow-strong: rgba(216, 220, 231, 0.28),
 		accent-shadow: rgba(216, 220, 231, 0.1),
+	),
+	'white': (
+		accent: #bcc8d4,
+		accent-ink: rgba(48, 61, 74, 0.96),
+		accent-line: rgba(88, 104, 120, 0.72),
+		accent-soft: rgba(111, 134, 156, 0.08),
+		accent-soft-strong: rgba(111, 134, 156, 0.16),
+		accent-focus-border: rgba(48, 61, 74, 0.24),
+		accent-ring: rgba(111, 134, 156, 0.14),
+		accent-glow: rgba(176, 193, 208, 0.28),
+		accent-glow-strong: rgba(176, 193, 208, 0.42),
+		accent-shadow: rgba(98, 117, 136, 0.14),
 	),
 );
 
@@ -62,14 +52,14 @@ $page-themes: (
 }
 
 @mixin apply($property, $token) {
-	#{$property}: value('purple-official', $token);
+	#{$property}: value($default-theme-name, $token);
 
-	.page[data-page-theme='purple-official'] & {
-		#{$property}: value('purple-official', $token);
+	.page[data-page-theme='#{$default-theme-name}'] & {
+		#{$property}: value($default-theme-name, $token);
 	}
 
 	@each $theme-name, $theme-values in $page-themes {
-		@if $theme-name != 'purple-official' {
+		@if $theme-name != $default-theme-name {
 			.page[data-page-theme='#{$theme-name}'] & {
 				#{$property}: map.get($theme-values, $token);
 			}
@@ -79,12 +69,12 @@ $page-themes: (
 
 @mixin apply-self($selector, $property, $token) {
 	#{$selector},
-	#{$selector}[data-page-theme='purple-official'] {
-		#{$property}: value('purple-official', $token);
+	#{$selector}[data-page-theme='#{$default-theme-name}'] {
+		#{$property}: value($default-theme-name, $token);
 	}
 
 	@each $theme-name, $theme-values in $page-themes {
-		@if $theme-name != 'purple-official' {
+		@if $theme-name != $default-theme-name {
 			#{$selector}[data-page-theme='#{$theme-name}'] {
 				#{$property}: map.get($theme-values, $token);
 			}
@@ -93,9 +83,9 @@ $page-themes: (
 }
 
 @mixin scope($theme-name) {
-	@if $theme-name == 'purple-official' {
+	@if $theme-name == $default-theme-name {
 		.page,
-		.page[data-page-theme='purple-official'] {
+		.page[data-page-theme='#{$default-theme-name}'] {
 			@content;
 		}
 	} @else {
@@ -106,14 +96,14 @@ $page-themes: (
 }
 
 @mixin each-scope {
-	@include scope('purple-official') {
-		@content('purple-official');
+	@include scope($default-theme-name) {
+		@content ($default-theme-name);
 	}
 
 	@each $theme-name, $theme-values in $page-themes {
-		@if $theme-name != 'purple-official' {
+		@if $theme-name != $default-theme-name {
 			@include scope($theme-name) {
-				@content($theme-name);
+				@content ($theme-name);
 			}
 		}
 	}
