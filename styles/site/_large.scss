@@ -3,7 +3,6 @@
 @mixin render {
 	@media (min-width: 980px) {
 		.page {
-			background-image: url('../../img/bg/bg_1920x1080.jpg');
 			height: 100svh;
 			min-height: 100svh;
 		}
@@ -148,12 +147,6 @@
 
 		.stack-panel__matrix-wrap {
 			margin-top: 0;
-		}
-	}
-
-	@media (min-width: 1440px) {
-		.page {
-			background-image: url('../../img/bg/bg_2560x1440.jpg');
 		}
 	}
 

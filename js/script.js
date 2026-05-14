@@ -20,10 +20,6 @@ document.addEventListener('DOMContentLoaded', () => {
 		return
 	}
 
-	if (typeof window.renderBackgroundScene === 'function') {
-		window.renderBackgroundScene(backgroundScene)
-	}
-
 	initNetworkCanvas(backgroundScene)
 })
 
@@ -88,15 +84,15 @@ function initTaglineRotator() {
 	const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 	let phraseIndex = 0
 	let charIndex = 0
-	let isDeleting = false
 	let timerId = 0
 	let started = false
 	let introObserver = null
 
-	const writeDelay = 50
-	const deleteDelay = 18
-	const phrasePause = 2500
-	const resetPause = 120
+	const writeDelay = 72
+	const fadeDuration = 420
+	const phrasePause = 2600
+	const initialPause = 1100
+	const restartPause = 180
 
 	const setPhrase = value => {
 		taglineText.textContent = value
@@ -120,38 +116,38 @@ function initTaglineRotator() {
 		started = false
 		phraseIndex = 0
 		charIndex = 0
-		isDeleting = false
+		taglineText.classList.remove('is-fading-out')
 		setPhrase(phrases[0])
 	}
 
-	const step = () => {
+	const queueStep = (callback, delay) => {
+		clearTimer()
+		timerId = window.setTimeout(callback, delay)
+	}
+
+	const typeCurrentPhrase = () => {
 		const currentPhrase = phrases[phraseIndex]
+		charIndex += 1
+		setPhrase(currentPhrase.slice(0, charIndex))
 
-		if (!isDeleting) {
-			charIndex += 1
-			setPhrase(currentPhrase.slice(0, charIndex))
-
-			if (charIndex >= currentPhrase.length) {
-				isDeleting = true
-				timerId = window.setTimeout(step, phrasePause)
-				return
-			}
-
-			timerId = window.setTimeout(step, writeDelay)
+		if (charIndex < currentPhrase.length) {
+			queueStep(typeCurrentPhrase, writeDelay)
 			return
 		}
 
-		charIndex -= 1
-		setPhrase(currentPhrase.slice(0, Math.max(charIndex, 0)))
+		queueStep(fadeToNextPhrase, phrasePause)
+	}
 
-		if (charIndex <= 0) {
-			isDeleting = false
+	const fadeToNextPhrase = () => {
+		taglineText.classList.add('is-fading-out')
+
+		timerId = window.setTimeout(() => {
 			phraseIndex = (phraseIndex + 1) % phrases.length
-			timerId = window.setTimeout(step, resetPause)
-			return
-		}
-
-		timerId = window.setTimeout(step, deleteDelay)
+			charIndex = 0
+			setPhrase('')
+			taglineText.classList.remove('is-fading-out')
+			queueStep(typeCurrentPhrase, restartPause)
+		}, fadeDuration)
 	}
 
 	const start = () => {
@@ -161,11 +157,11 @@ function initTaglineRotator() {
 
 		started = true
 		clearTimer()
-		setPhrase('')
 		phraseIndex = 0
 		charIndex = 0
-		isDeleting = false
-		timerId = window.setTimeout(step, 260)
+		taglineText.classList.remove('is-fading-out')
+		setPhrase('')
+		queueStep(typeCurrentPhrase, initialPause)
 	}
 
 	const startWhenIntroIsDone = () => {
@@ -2190,8 +2186,11 @@ function initNetworkCanvas(backgroundScene) {
 	}
 
 	function syncIdleTargets() {
+		const activeTheme = getActivePageTheme()
+		const idleUpperYRatio = activeTheme === 'white' ? 0.5 : 0.68
+
 		idleUpperTarget.x = clamp(Math.round(width * 0.67), 1, Math.max(width - 1, 1))
-		idleUpperTarget.y = clamp(Math.round(networkLimitY * 0.50), 1, Math.max(networkLimitY - 1, 1))
+		idleUpperTarget.y = clamp(Math.round(networkLimitY * idleUpperYRatio), 1, Math.max(networkLimitY - 1, 1))
 
 		if (!lowerLeftRegion) {
 			idleLowerLeftTarget.x = idleUpperTarget.x
@@ -2498,64 +2497,50 @@ function initThemeSwitcher() {
 
 	const themeColorMeta =
 		document.querySelector('meta[data-theme-color]') || document.querySelector('meta[name="theme-color"]')
-	const backgroundScene = page.querySelector('.background')
-	const baseLayer = document.createElement('div')
-	const incomingLayer = document.createElement('div')
-	baseLayer.className = 'page-theme-layer page-theme-layer--base'
-	incomingLayer.className = 'page-theme-layer page-theme-layer--incoming'
-	baseLayer.setAttribute('aria-hidden', 'true')
-	incomingLayer.setAttribute('aria-hidden', 'true')
-
-	const insertTarget = backgroundScene || page.firstChild
-	page.insertBefore(incomingLayer, insertTarget)
-	page.insertBefore(baseLayer, incomingLayer)
-
-	const storageKey = 'folio-page-theme-v5'
+	const storageKey = 'folio-page-theme-v6'
 	const themes = [
-		{ id: 'white', label: 'White', accent: '#5f7286', meta: '#ffffff', backgroundVariant: '' },
-		{ id: 'blue', label: 'Blue', accent: '#59a5ef', meta: '#1f568e', backgroundVariant: 'blue' },
-		{ id: 'black', label: 'Black', accent: '#202122', meta: '#202122', backgroundVariant: 'black' },
-	]
-	const viewportThemes = [
-		{ size: '2560x1440', query: window.matchMedia('(min-width: 1440px)') },
-		{ size: '1920x1080', query: window.matchMedia('(min-width: 980px)') },
-		{ size: '1280x800', query: window.matchMedia('(min-width: 621px)') },
-		{ size: '768x1024', query: null },
+		{ id: 'white', label: 'White', accent: '#5f7286', meta: '#ffffff' },
+		{ id: 'blue', label: 'Blue', accent: '#59a5ef', meta: '#1f568e' },
+		{ id: 'black', label: 'Black', accent: '#202122', meta: '#202122' },
 	]
 
 	let currentTheme = getStoredTheme()
-	let themeRequestId = 0
-	let activeLayerImage = ''
-	let layerTransitionTimerId = 0
+	let themeSwitchTimerId = 0
+	let themeRevealTimerId = 0
 
-	const clearLayerTransition = () => {
-		if (!layerTransitionTimerId) {
-			return
+	const setThemeCrossfadeState = isActive => {
+		page.classList.toggle('is-theme-crossfading', isActive)
+	}
+
+	const clearThemeTransition = () => {
+		if (themeSwitchTimerId) {
+			window.clearTimeout(themeSwitchTimerId)
+			themeSwitchTimerId = 0
 		}
 
-		window.clearTimeout(layerTransitionTimerId)
-		layerTransitionTimerId = 0
+		if (themeRevealTimerId) {
+			window.clearTimeout(themeRevealTimerId)
+			themeRevealTimerId = 0
+		}
+
+		setThemeCrossfadeState(false)
 	}
 
-	const hideIncomingLayer = () => {
-		incomingLayer.classList.remove('is-visible')
-		incomingLayer.style.backgroundImage = ''
+	const applyVisualTheme = themeId => {
+		page.dataset.pageTheme = themeId
+		page.style.backgroundImage = 'none'
+		document.documentElement.dataset.pageTheme = themeId
+		if (document.body) {
+			document.body.dataset.pageTheme = themeId
+		}
 	}
 
-	const applyTheme = (themeId, persist = true) => {
+	const applyTheme = (themeId, persist = true, options = {}) => {
 		const theme = themes.find(entry => entry.id === themeId) || themes[0]
-		const backgroundSize = getBackgroundSize()
-		const variantSuffix = theme.backgroundVariant ? ` ${theme.backgroundVariant}` : ''
-		const imageUrl = new URL(`img/bg/bg_${backgroundSize}${variantSuffix}.jpg`, window.location.href).href
-		const requestId = themeRequestId + 1
+		const previousThemeId = page.dataset.pageTheme || ''
+		const shouldAnimate = options.animate !== false && previousThemeId && previousThemeId !== theme.id
 
 		currentTheme = theme.id
-		themeRequestId = requestId
-		page.dataset.pageTheme = theme.id
-		document.documentElement.dataset.pageTheme = theme.id
-		if (document.body) {
-			document.body.dataset.pageTheme = theme.id
-		}
 		toggle.dataset.theme = theme.id
 		toggle.style.color = theme.accent
 		syncBrowserThemeColor(theme)
@@ -2566,68 +2551,22 @@ function initThemeSwitcher() {
 			storeTheme(theme.id)
 		}
 
-		clearLayerTransition()
+		clearThemeTransition()
 
-		if (theme.id === 'white') {
-			page.style.backgroundImage = 'none'
-			baseLayer.style.backgroundImage = ''
-			activeLayerImage = ''
-			hideIncomingLayer()
+		if (!shouldAnimate) {
+			applyVisualTheme(theme.id)
 			return
 		}
 
-		const previewImage = new Image()
-		previewImage.onload = () => {
-			if (requestId !== themeRequestId) {
-				return
-			}
-
-			const backgroundValue = `url("${imageUrl}")`
-			page.style.backgroundImage = backgroundValue
-			if (!activeLayerImage) {
-				baseLayer.style.backgroundImage = backgroundValue
-				activeLayerImage = backgroundValue
-				hideIncomingLayer()
-				return
-			}
-
-			if (activeLayerImage === backgroundValue) {
-				hideIncomingLayer()
-				return
-			}
-
-			incomingLayer.classList.remove('is-visible')
-			incomingLayer.style.backgroundImage = backgroundValue
-			void incomingLayer.offsetWidth
-			incomingLayer.classList.add('is-visible')
-
-			layerTransitionTimerId = window.setTimeout(() => {
-				if (requestId !== themeRequestId) {
-					return
-				}
-
-				baseLayer.style.backgroundImage = backgroundValue
-				activeLayerImage = backgroundValue
-				hideIncomingLayer()
-				layerTransitionTimerId = 0
-			}, 820)
-		}
-
-		previewImage.onerror = () => {
-			if (requestId !== themeRequestId) {
-				return
-			}
-
-			if (theme.id !== themes[0].id) {
-				if (persist) {
-					storeTheme(themes[0].id)
-				}
-
-				applyTheme(themes[0].id, false)
-			}
-		}
-
-		previewImage.src = imageUrl
+		setThemeCrossfadeState(true)
+		themeSwitchTimerId = window.setTimeout(() => {
+			applyVisualTheme(theme.id)
+			themeSwitchTimerId = 0
+			themeRevealTimerId = window.setTimeout(() => {
+				setThemeCrossfadeState(false)
+				themeRevealTimerId = 0
+			}, 220)
+		}, 160)
 	}
 
 	toggle.addEventListener('click', () => {
@@ -2636,17 +2575,7 @@ function initThemeSwitcher() {
 		applyTheme(nextTheme.id)
 	})
 
-	for (const viewportTheme of viewportThemes) {
-		if (!viewportTheme.query) {
-			continue
-		}
-
-		addMediaQueryListener(viewportTheme.query, () => {
-			applyTheme(currentTheme, false)
-		})
-	}
-
-	applyTheme(currentTheme, false)
+	applyTheme(currentTheme, false, { animate: false })
 
 	function getStoredTheme() {
 		const storedTheme = getLocalStorageTheme(storageKey) || getCookieTheme(storageKey)
@@ -2655,11 +2584,6 @@ function initThemeSwitcher() {
 		}
 
 		return themes[0].id
-	}
-
-	function getBackgroundSize() {
-		const activeViewport = viewportThemes.find(viewportTheme => viewportTheme.query && viewportTheme.query.matches)
-		return activeViewport ? activeViewport.size : viewportThemes[viewportThemes.length - 1].size
 	}
 
 	function syncBrowserThemeColor(theme) {
