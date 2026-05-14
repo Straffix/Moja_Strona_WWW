@@ -572,7 +572,7 @@ a {
 		transform-origin: center center;
 		transition:
 			transform 0.78s cubic-bezier(0.22, 1, 0.36, 1),
-			opacity 0.16s ease;
+			opacity 0.22s ease;
 		will-change: transform;
 
 		&-word {
@@ -597,11 +597,6 @@ a {
 	&.is-flying {
 		background-color: colors.alpha(colors.$black, 0);
 		pointer-events: none;
-
-		.intro-brand {
-			opacity: 0;
-			transition-delay: 0s, 0.58s;
-		}
 	}
 
 	&.is-done {
@@ -834,7 +829,7 @@ a {
 
 	.intro.is-flying ~ & {
 		opacity: 1;
-		transition-delay: 0.58s;
+		transition-delay: 0.38s;
 	}
 
 	&-word {
@@ -3085,31 +3080,17 @@ a {
 }
 
 #contact-panel .contact-back__socials {
-	display: grid;
-	gap: 0.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
 	width: 100%;
 	margin-top: 1rem;
 	padding-top: 1rem;
 	border-top: 1px solid colors.alpha(colors.$black, 0.14);
 }
 
-#contact-panel .contact-back__social-heading {
-	display: inline-flex;
-	align-items: center;
-	width: fit-content;
-	margin: 0 0 0.15rem;
-	padding: 0.16rem 0.5rem 0.16rem 0.62rem;
-	border-left: 2px solid rgba(44, 110, 176, 0.88);
-	font-size: 0.94rem;
-	font-weight: 700;
-	letter-spacing: 0.12em;
-	text-transform: uppercase;
-	color: rgba(31, 86, 142, 0.96);
-}
-
 #contact-panel .contact-back__social-link-main {
 	display: inline-flex;
-	align-items: center;
 	gap: 0.8rem;
 	min-width: 0;
 }
@@ -3131,6 +3112,7 @@ a {
 #contact-panel .contact-back__social-link-icon svg {
 	width: 1.34rem;
 	height: 1.34rem;
+	color: #000;
 }
 
 #contact-panel .contact-back__social-link-text {
@@ -3140,7 +3122,7 @@ a {
 #contact-panel .contact-back__social-link {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
+	justify-content: center;
 	gap: 0.9rem;
 	width: 100%;
 	padding: 0.82rem 0;
@@ -3155,27 +3137,10 @@ a {
 		padding-right 0.7s ease;
 }
 
-#contact-panel .contact-back__social-link::after {
-	content: '->';
-	font-size: 1.25rem;
-	line-height: 1;
-	opacity: 0.58;
-}
-
 #contact-panel .contact-back__social-link:hover,
 #contact-panel .contact-back__social-link:focus-visible {
-	border-color: rgba(44, 110, 176, 0.88);
-	color: #fff;
-	background-color: rgba(31, 86, 142, 0.96);
+	color: colors.alpha(colors.$black, 0.56);
 	border-radius: 0.5rem;
-	padding-right: 1rem;
-}
-
-#contact-panel .contact-back__social-link:hover .contact-back__social-link-icon,
-#contact-panel .contact-back__social-link:focus-visible .contact-back__social-link-icon {
-	transform: translateY(-1px);
-	color: #fff;
-	margin-left: 10px;
 }
 
 #contact-panel .contact-back__social-link--placeholder {
@@ -3183,7 +3148,7 @@ a {
 }
 
 #contact-panel .contact-back__social-link--placeholder::after {
-	content: 'wkrotce';
+	content: 'wkrótce';
 	font-size: 1rem;
 	letter-spacing: 0.08em;
 }
@@ -3799,7 +3764,7 @@ a {
 	width: clamp(3.8rem, 3.8vw, 6.2rem);
 	height: clamp(3.8rem, 3.8vw, 6.2rem);
 	object-fit: contain;
-	opacity: 0.78;
+	opacity: 0.88;
 	transition:
 		transform 0.36s cubic-bezier(0.22, 1, 0.36, 1),
 		opacity 0.28s ease;
@@ -3808,12 +3773,12 @@ a {
 .stack-panel__item:hover .stack-panel__logo,
 .stack-panel__item:focus-visible .stack-panel__logo,
 .stack-panel__item.is-hover-active .stack-panel__logo {
-	opacity: 0.86;
+	opacity: 0.98;
 	transform: scale(1.05);
 }
 
 .stack-panel__item.is-hover-trail .stack-panel__logo {
-	opacity: 0.82;
+	opacity: 0.92;
 }
 
 .stack-panel__name {
@@ -3977,12 +3942,6 @@ a {
 		color: $ink;
 	}
 
-	#contact-panel .contact-back__social-link:hover,
-	#contact-panel .contact-back__social-link:focus-visible {
-		border-color: $line;
-		background-color: $ink;
-	}
-
 	#contact-panel .contact-back__social:hover,
 	#contact-panel .contact-back__social:focus-visible {
 		border-color: $line;
@@ -4078,17 +4037,17 @@ a {
 	}
 
 	.network {
-		clip-path: polygon(31% 0%, 64% 0%, 72% 66%, 28% 66%);
-		filter: drop-shadow(0 0 1rem rgba(156, 140, 255, 0.18));
+		clip-path: none;
+		filter: drop-shadow(0 0 1rem rgba(0, 0, 0, 0.12));
 		mix-blend-mode: multiply;
 	}
 
 	.background--network-active .network {
-		opacity: 0.46;
+		opacity: 0.72;
 	}
 
 	.background--network-muted .network {
-		opacity: 0.16;
+		opacity: 0.24;
 	}
 
 	.lower-band {
@@ -4168,9 +4127,14 @@ a {
 	}
 
 	.tile__external-indicator-icon,
-	.tile-icon {
-		filter: brightness(0) saturate(100%) invert(69%) sepia(25%) saturate(1125%) hue-rotate(204deg) brightness(101%)
-			contrast(101%);
+	.tile-icon,
+	.tile-panel__tile-icon,
+	.stack-panel__header-icon,
+	.portfolio-panel__header-icon,
+	.about-panel__header-icon,
+	#contact-panel .tile-panel__heading-icon {
+		filter: none;
+		opacity: 0.94;
 	}
 
 	.tile:not(.tile--strategic) .label {
@@ -4241,21 +4205,21 @@ a {
 	}
 
 	.site-footer__social-link {
-		background-color: rgba(255, 255, 255, 0.92);
-		color: rgba(132, 120, 255, 0.88);
+		background-color: rgba(255, 255, 255, 0.96);
+		color: rgba(77, 90, 116, 0.96);
 		box-shadow:
 			0 0.8rem 1.8rem rgba(182, 187, 223, 0.24),
-			inset 0 0 0 1px rgba(167, 158, 255, 0.14);
+			inset 0 0 0 1px rgba(146, 156, 188, 0.18);
 	}
 
 	.site-footer__social-link:hover,
 	.site-footer__social-link:focus-visible {
-		border-color: rgba(161, 154, 255, 0.34);
+		border-color: rgba(146, 156, 188, 0.34);
 		background: rgba(255, 255, 255, 1);
-		color: rgba(113, 100, 255, 0.98);
+		color: rgba(94, 105, 156, 0.98);
 		box-shadow:
 			0 1rem 2rem rgba(180, 186, 223, 0.3),
-			inset 0 0 0 1px rgba(167, 158, 255, 0.18);
+			inset 0 0 0 1px rgba(146, 156, 188, 0.22);
 	}
 
 	.site-footer__copy {

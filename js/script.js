@@ -1917,22 +1917,25 @@ function initNetworkCanvas(backgroundScene) {
 		return
 	}
 
-	const tiles = document.querySelector('.tiles')
-	const strategicTile = document.querySelector('.tile--strategic')
+	const portfolioTile = document.querySelector('.tile--portfolio')
+	const interactiveTiles = Array.from(document.querySelectorAll('.tile:not(.tile--strategic)'))
 	const root = document.documentElement
 	const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
 	const desktopQuery = window.matchMedia('(min-width: 801px)')
 
 	const target = { x: 0, y: 0 }
+	const idleUpperTarget = { x: 0, y: 0 }
+	const idleLowerLeftTarget = { x: 0, y: 0 }
 	let width = 0
 	let height = 0
 	let networkLimitY = 0
 	let networkDrawHeight = 0
-	let strategicRegion = null
+	let lowerLeftRegion = null
 	let scale = 1
 	let animationFrameId = 0
 	let animateNetwork = true
 	let isEnabled = false
+	let hasPointerFocus = false
 	let sceneRect = backgroundScene.getBoundingClientRect()
 	let points = []
 
@@ -1966,9 +1969,9 @@ function initNetworkCanvas(backgroundScene) {
 		width = Math.max(Math.round(sceneRect.width), 1)
 		height = Math.max(Math.round(sceneRect.height), 1)
 		networkLimitY = getNetworkLimitY()
-		strategicRegion = getStrategicRegion()
+		lowerLeftRegion = getLowerLeftRegion()
 		networkDrawHeight = getNetworkDrawHeight()
-		scale = Math.min(window.devicePixelRatio || 1, 2)
+		scale = 1
 
 		canvas.width = Math.round(width * scale)
 		canvas.height = Math.round(height * scale)
@@ -1977,7 +1980,8 @@ function initNetworkCanvas(backgroundScene) {
 
 		context.setTransform(scale, 0, 0, scale, 0, 0)
 		target.x = width / 2
-		target.y = Math.max(networkLimitY / 2, 1)
+		target.y = getIdleTargetY()
+		syncIdleTargets()
 		points = createPoints(width, Math.max(networkDrawHeight, 1))
 	}
 
@@ -1989,9 +1993,10 @@ function initNetworkCanvas(backgroundScene) {
 		const pointerX = event.clientX - sceneRect.left
 		const pointerY = event.clientY - sceneRect.top
 		const isPointerInUpperArea = pointerY >= 0 && pointerY < networkLimitY
-		const isPointerInStrategicArea = isPointInsideRect(pointerX, pointerY, strategicRegion)
-		const isPointerInInteractiveArea = isPointerInUpperArea || isPointerInStrategicArea
+		const isPointerInLowerLeftArea = isPointInsideRect(pointerX, pointerY, lowerLeftRegion)
+		const isPointerInInteractiveArea = isPointerInUpperArea || isPointerInLowerLeftArea
 
+		hasPointerFocus = isPointerInInteractiveArea
 		backgroundScene.classList.toggle('background--network-muted', !isPointerInInteractiveArea)
 
 		if (!isPointerInInteractiveArea) {
@@ -2005,8 +2010,9 @@ function initNetworkCanvas(backgroundScene) {
 	const handleScroll = () => {
 		sceneRect = backgroundScene.getBoundingClientRect()
 		networkLimitY = getNetworkLimitY()
-		strategicRegion = getStrategicRegion()
+		lowerLeftRegion = getLowerLeftRegion()
 		networkDrawHeight = getNetworkDrawHeight()
+		syncIdleTargets()
 		animateNetwork = window.scrollY <= window.innerHeight
 	}
 
@@ -2027,14 +2033,23 @@ function initNetworkCanvas(backgroundScene) {
 		context.clearRect(0, 0, width, height)
 
 		if (animateNetwork && hasVisibleNetworkArea()) {
+			const primaryTarget = hasPointerFocus ? target : idleUpperTarget
+			const secondaryTarget = hasPointerFocus || !lowerLeftRegion ? null : idleLowerLeftTarget
+
 			context.save()
 			context.beginPath()
 			context.rect(0, 0, width, networkLimitY)
-			if (strategicRegion) {
-				context.rect(strategicRegion.x, strategicRegion.y, strategicRegion.width, strategicRegion.height)
+			if (lowerLeftRegion) {
+				context.rect(lowerLeftRegion.x, lowerLeftRegion.y, lowerLeftRegion.width, lowerLeftRegion.height)
 			}
 			context.clip()
-			drawNetwork(context, points, target)
+			drawNetwork(
+				context,
+				points,
+				primaryTarget,
+				getNetworkTone(hasPointerFocus && isPointInsideRect(target.x, target.y, lowerLeftRegion)),
+				secondaryTarget
+			)
 			context.restore()
 		}
 
@@ -2071,28 +2086,85 @@ function initNetworkCanvas(backgroundScene) {
 	}
 
 	function getNetworkLimitY() {
-		if (!tiles) {
+		if (!interactiveTiles.length) {
 			return height
 		}
 
-		const tilesRect = tiles.getBoundingClientRect()
-		return clamp(Math.round(tilesRect.top - sceneRect.top), 0, height)
+		const tileTop = interactiveTiles.reduce((minTop, tile) => {
+			const tileRect = tile.getBoundingClientRect()
+			return Math.min(minTop, tileRect.top - sceneRect.top)
+		}, height)
+
+		return clamp(Math.round(tileTop), 0, height)
 	}
 
-	function getStrategicRegion() {
-		if (getActivePageTheme() === 'white') {
+	function getLowerLeftRegion() {
+		if (!portfolioTile) {
 			return null
 		}
 
-		if (!strategicTile) {
+		const portfolioRect = convertDomRectToSceneRect(portfolioTile.getBoundingClientRect())
+		if (!portfolioRect || portfolioRect.x <= 0 || networkLimitY >= height) {
 			return null
 		}
 
-		const strategicRect = strategicTile.getBoundingClientRect()
-		const x = clamp(Math.round(strategicRect.left - sceneRect.left), 0, width)
-		const y = clamp(Math.round(strategicRect.top - sceneRect.top), 0, height)
-		const right = clamp(Math.round(strategicRect.right - sceneRect.left), 0, width)
-		const bottom = clamp(Math.round(strategicRect.bottom - sceneRect.top), 0, height)
+		return {
+			x: 0,
+			y: networkLimitY,
+			width: portfolioRect.x,
+			height: Math.max(height - networkLimitY, 0),
+		}
+	}
+
+	function getNetworkDrawHeight() {
+		if (!lowerLeftRegion) {
+			return networkLimitY
+		}
+
+		return Math.max(networkLimitY, lowerLeftRegion.y + lowerLeftRegion.height)
+	}
+
+	function hasVisibleNetworkArea() {
+		return networkLimitY > 0 || Boolean(lowerLeftRegion)
+	}
+
+	function isPointInsideRect(x, y, rect) {
+		if (!rect) {
+			return false
+		}
+
+		return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height
+	}
+
+	function getIdleTargetY() {
+		if (networkLimitY <= 1) {
+			return 1
+		}
+
+		const lowerBias = clamp(Math.round(height * 0.08), 42, 84)
+		return clamp(networkLimitY - lowerBias, 1, Math.max(networkLimitY - 1, 1))
+	}
+
+	function syncIdleTargets() {
+		idleUpperTarget.x = clamp(Math.round(width * 0.56), 1, Math.max(width - 1, 1))
+		idleUpperTarget.y = clamp(Math.round(networkLimitY * 0.58), 1, Math.max(networkLimitY - 1, 1))
+
+		if (!lowerLeftRegion) {
+			idleLowerLeftTarget.x = idleUpperTarget.x
+			idleLowerLeftTarget.y = idleUpperTarget.y
+			return
+		}
+
+		const lowerLeftOffsetY = clamp(Math.round((height - networkLimitY) * 0.18), 92, 156)
+		idleLowerLeftTarget.x = clamp(Math.round(lowerLeftRegion.width * 0.46), 1, Math.max(width - 1, 1))
+		idleLowerLeftTarget.y = clamp(Math.round(lowerLeftRegion.y + lowerLeftOffsetY), 1, Math.max(height - 1, 1))
+	}
+
+	function convertDomRectToSceneRect(domRect) {
+		const x = clamp(Math.round(domRect.left - sceneRect.left), 0, width)
+		const y = clamp(Math.round(domRect.top - sceneRect.top), 0, height)
+		const right = clamp(Math.round(domRect.right - sceneRect.left), 0, width)
+		const bottom = clamp(Math.round(domRect.bottom - sceneRect.top), 0, height)
 		const rectWidth = Math.max(right - x, 0)
 		const rectHeight = Math.max(bottom - y, 0)
 
@@ -2107,38 +2179,20 @@ function initNetworkCanvas(backgroundScene) {
 			height: rectHeight,
 		}
 	}
-
-	function getNetworkDrawHeight() {
-		if (!strategicRegion) {
-			return networkLimitY
-		}
-
-		return Math.max(networkLimitY, strategicRegion.y + strategicRegion.height)
-	}
-
-	function hasVisibleNetworkArea() {
-		return networkLimitY > 0 || Boolean(strategicRegion)
-	}
-
-	function isPointInsideRect(x, y, rect) {
-		if (!rect) {
-			return false
-		}
-
-		return x >= rect.x && x <= rect.x + rect.width && y >= rect.y && y <= rect.y + rect.height
-	}
 }
 
 function createPoints(width, height) {
 	const points = []
 	const stepX = width / 20
 	const stepY = height / 20
+	const driftX = clamp(stepX * 0.32, 10, 18)
+	const driftY = clamp(stepY * 0.32, 8, 16)
 
 	for (let x = 0; x < width; x += stepX) {
 		for (let y = 0; y < height; y += stepY) {
 			const pointX = x + Math.random() * stepX
 			const pointY = y + Math.random() * stepY
-			points.push(createPoint(pointX, pointY))
+			points.push(createPoint(pointX, pointY, driftX, driftY))
 		}
 	}
 
@@ -2149,7 +2203,7 @@ function createPoints(width, height) {
 	return points
 }
 
-function createPoint(x, y) {
+function createPoint(x, y, driftX, driftY) {
 	const point = {
 		x,
 		y,
@@ -2157,8 +2211,10 @@ function createPoint(x, y) {
 		originY: y,
 		active: 0,
 		circleActive: 0,
-		radius: 2 + Math.random() * 2,
+		radius: 1.25 + Math.random() * 1.1,
 		closest: [],
+		driftX,
+		driftY,
 		shiftStart: 0,
 		shiftDuration: 0,
 		shiftFromX: x,
@@ -2226,27 +2282,29 @@ function setNextPointShift(point, now, seed) {
 
 	point.shiftFromX = point.x
 	point.shiftFromY = point.y
-	point.shiftToX = point.originX - 50 + Math.random() * 100
-	point.shiftToY = point.originY - 50 + Math.random() * 100
-	point.shiftDuration = 1000 + Math.random() * 1000
+	point.shiftToX = point.originX - point.driftX + Math.random() * point.driftX * 2
+	point.shiftToY = point.originY - point.driftY + Math.random() * point.driftY * 2
+	point.shiftDuration = 1600 + Math.random() * 1200
 	point.shiftStart = seed ? now - Math.random() * point.shiftDuration : now
 }
 
-function drawNetwork(context, points, target) {
-	const tone = getNetworkTone()
+function drawNetwork(context, points, target, tone, secondaryTarget = null) {
+	context.lineWidth = tone.lineWidth || 1
 
 	for (const point of points) {
-		const distance = Math.abs(getDistance(target, point))
+		const primaryDistance = Math.abs(getDistance(target, point))
+		const secondaryDistance = secondaryTarget ? Math.abs(getDistance(secondaryTarget, point)) : Infinity
+		const distance = Math.min(primaryDistance, secondaryDistance)
 
-		if (distance < 1000) {
-			point.active = 0.3
-			point.circleActive = 0.6
-		} else if (distance < 25000) {
-			point.active = 0.1
-			point.circleActive = 0.3
-		} else if (distance < 50000) {
-			point.active = 0.02
-			point.circleActive = 0.1
+		if (distance < tone.nearDistance) {
+			point.active = tone.nearLineStrength
+			point.circleActive = tone.nearCircleStrength
+		} else if (distance < tone.midDistance) {
+			point.active = tone.midLineStrength
+			point.circleActive = tone.midCircleStrength
+		} else if (distance < tone.farDistance) {
+			point.active = tone.farLineStrength
+			point.circleActive = tone.farCircleStrength
 		} else {
 			point.active = 0
 			point.circleActive = 0
@@ -2290,21 +2348,77 @@ function getActivePageTheme() {
 	return document.querySelector('.page')?.dataset.pageTheme || 'white'
 }
 
-function getNetworkTone() {
+function getNetworkTone(isLowerLeftFocus = false) {
 	const activeTheme = getActivePageTheme()
 
 	if (activeTheme === 'white') {
+		if (isLowerLeftFocus) {
+			return {
+				rgb: '0, 0, 0',
+				lineOpacity: 0.8,
+				circleOpacity: 0.9,
+				lineWidth: 0.76,
+				nearDistance: 1000,
+				midDistance: 25000,
+				farDistance: 50000,
+				nearLineStrength: 0.32,
+				nearCircleStrength: 0.58,
+				midLineStrength: 0.12,
+				midCircleStrength: 0.28,
+				farLineStrength: 0.04,
+				farCircleStrength: 0.1,
+			}
+		}
+
 		return {
-			rgb: '154, 136, 255',
-			lineOpacity: 0.48,
-			circleOpacity: 0.6,
+			rgb: '0, 0, 0',
+			lineOpacity: 0.74,
+			circleOpacity: 0.82,
+			lineWidth: 0.72,
+			nearDistance: 1000,
+			midDistance: 25000,
+			farDistance: 50000,
+			nearLineStrength: 0.28,
+			nearCircleStrength: 0.5,
+			midLineStrength: 0.1,
+			midCircleStrength: 0.24,
+			farLineStrength: 0.028,
+			farCircleStrength: 0.08,
+		}
+	}
+
+	if (isLowerLeftFocus) {
+		return {
+			rgb: '255, 255, 255',
+			lineOpacity: 0.9,
+			circleOpacity: 0.98,
+			lineWidth: 0.8,
+			nearDistance: 1000,
+			midDistance: 25000,
+			farDistance: 50000,
+			nearLineStrength: 0.34,
+			nearCircleStrength: 0.64,
+			midLineStrength: 0.12,
+			midCircleStrength: 0.3,
+			farLineStrength: 0.035,
+			farCircleStrength: 0.1,
 		}
 	}
 
 	return {
 		rgb: '255, 255, 255',
-		lineOpacity: 1,
-		circleOpacity: 1,
+		lineOpacity: 0.82,
+		circleOpacity: 0.9,
+		lineWidth: 0.76,
+		nearDistance: 1000,
+		midDistance: 25000,
+		farDistance: 50000,
+		nearLineStrength: 0.3,
+		nearCircleStrength: 0.56,
+		midLineStrength: 0.1,
+		midCircleStrength: 0.26,
+		farLineStrength: 0.03,
+		farCircleStrength: 0.08,
 	}
 }
 
@@ -2404,7 +2518,7 @@ function initThemeSwitcher() {
 		toggle.style.color = theme.accent
 		syncBrowserThemeColor(theme)
 		toggle.setAttribute('aria-label', `Zmien wariant tla strony. Aktualnie: ${theme.label}`)
-		toggle.setAttribute('title', `Tlo: ${theme.label}. Kliknij, aby przelaczyc.`)
+		toggle.setAttribute('title', `Aktualne tło: ${theme.label}. Kliknij, aby przełaczyć.`)
 
 		if (persist) {
 			storeTheme(theme.id)
