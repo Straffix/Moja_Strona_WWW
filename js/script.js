@@ -1936,6 +1936,9 @@ function initNetworkCanvas(backgroundScene) {
 	let animateNetwork = true
 	let isEnabled = false
 	let hasPointerFocus = false
+	let useIdleTargets = true
+	let idleDisplayMode = 'landing'
+	let returnToIdleTimerId = 0
 	let sceneRect = backgroundScene.getBoundingClientRect()
 	let points = []
 
@@ -1961,6 +1964,7 @@ function initNetworkCanvas(backgroundScene) {
 		}
 
 		stopAnimation()
+		clearReturnToIdleTimer()
 		clearCanvas()
 	}
 
@@ -1982,6 +1986,8 @@ function initNetworkCanvas(backgroundScene) {
 		target.x = width / 2
 		target.y = getIdleTargetY()
 		syncIdleTargets()
+		useIdleTargets = true
+		idleDisplayMode = 'landing'
 		points = createPoints(width, Math.max(networkDrawHeight, 1))
 	}
 
@@ -1997,12 +2003,16 @@ function initNetworkCanvas(backgroundScene) {
 		const isPointerInInteractiveArea = isPointerInUpperArea || isPointerInLowerLeftArea
 
 		hasPointerFocus = isPointerInInteractiveArea
-		backgroundScene.classList.toggle('background--network-muted', !isPointerInInteractiveArea)
 
 		if (!isPointerInInteractiveArea) {
+			scheduleReturnToIdle('tagline')
 			return
 		}
 
+		clearReturnToIdleTimer()
+		backgroundScene.classList.remove('background--network-muted')
+		useIdleTargets = false
+		idleDisplayMode = 'landing'
 		target.x = pointerX
 		target.y = pointerY
 	}
@@ -2033,8 +2043,9 @@ function initNetworkCanvas(backgroundScene) {
 		context.clearRect(0, 0, width, height)
 
 		if (animateNetwork && hasVisibleNetworkArea()) {
-			const primaryTarget = hasPointerFocus ? target : idleUpperTarget
-			const secondaryTarget = hasPointerFocus || !lowerLeftRegion ? null : idleLowerLeftTarget
+			const primaryTarget = useIdleTargets ? idleUpperTarget : target
+			const isPrimaryLowerLeftFocus = !useIdleTargets && isPointInsideRect(primaryTarget.x, primaryTarget.y, lowerLeftRegion)
+			const shouldDrawLowerLeftIdleCluster = useIdleTargets && idleDisplayMode === 'landing' && lowerLeftRegion
 
 			context.save()
 			context.beginPath()
@@ -2043,13 +2054,10 @@ function initNetworkCanvas(backgroundScene) {
 				context.rect(lowerLeftRegion.x, lowerLeftRegion.y, lowerLeftRegion.width, lowerLeftRegion.height)
 			}
 			context.clip()
-			drawNetwork(
-				context,
-				points,
-				primaryTarget,
-				getNetworkTone(hasPointerFocus && isPointInsideRect(target.x, target.y, lowerLeftRegion)),
-				secondaryTarget
-			)
+			drawNetwork(context, points, primaryTarget, getNetworkTone(isPrimaryLowerLeftFocus))
+			if (shouldDrawLowerLeftIdleCluster) {
+				drawNetwork(context, points, idleLowerLeftTarget, getNetworkTone(true))
+			}
 			context.restore()
 		}
 
@@ -2079,6 +2087,42 @@ function initNetworkCanvas(backgroundScene) {
 			window.cancelAnimationFrame(animationFrameId)
 			animationFrameId = 0
 		}
+	}
+
+	function clearReturnToIdleTimer() {
+		if (!returnToIdleTimerId) {
+			return
+		}
+
+		window.clearTimeout(returnToIdleTimerId)
+		returnToIdleTimerId = 0
+	}
+
+	function scheduleReturnToIdle(mode = 'tagline') {
+		if (useIdleTargets && idleDisplayMode === mode) {
+			return
+		}
+
+		if (returnToIdleTimerId) {
+			return
+		}
+
+		backgroundScene.classList.add('background--network-muted')
+
+		returnToIdleTimerId = window.setTimeout(() => {
+			if (hasPointerFocus) {
+				returnToIdleTimerId = 0
+				backgroundScene.classList.remove('background--network-muted')
+				return
+			}
+
+			useIdleTargets = true
+			idleDisplayMode = mode
+			target.x = idleUpperTarget.x
+			target.y = idleUpperTarget.y
+			backgroundScene.classList.remove('background--network-muted')
+			returnToIdleTimerId = 0
+		}, 220)
 	}
 
 	function clearCanvas() {
@@ -2146,8 +2190,8 @@ function initNetworkCanvas(backgroundScene) {
 	}
 
 	function syncIdleTargets() {
-		idleUpperTarget.x = clamp(Math.round(width * 0.56), 1, Math.max(width - 1, 1))
-		idleUpperTarget.y = clamp(Math.round(networkLimitY * 0.58), 1, Math.max(networkLimitY - 1, 1))
+		idleUpperTarget.x = clamp(Math.round(width * 0.67), 1, Math.max(width - 1, 1))
+		idleUpperTarget.y = clamp(Math.round(networkLimitY * 0.50), 1, Math.max(networkLimitY - 1, 1))
 
 		if (!lowerLeftRegion) {
 			idleLowerLeftTarget.x = idleUpperTarget.x
@@ -2288,13 +2332,11 @@ function setNextPointShift(point, now, seed) {
 	point.shiftStart = seed ? now - Math.random() * point.shiftDuration : now
 }
 
-function drawNetwork(context, points, target, tone, secondaryTarget = null) {
+function drawNetwork(context, points, target, tone) {
 	context.lineWidth = tone.lineWidth || 1
 
 	for (const point of points) {
-		const primaryDistance = Math.abs(getDistance(target, point))
-		const secondaryDistance = secondaryTarget ? Math.abs(getDistance(secondaryTarget, point)) : Infinity
-		const distance = Math.min(primaryDistance, secondaryDistance)
+		const distance = Math.abs(getDistance(target, point))
 
 		if (distance < tone.nearDistance) {
 			point.active = tone.nearLineStrength
