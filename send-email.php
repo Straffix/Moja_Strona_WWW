@@ -2,6 +2,9 @@
 declare(strict_types=1);
 
 header('Content-Type: application/json; charset=UTF-8');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+header('X-Content-Type-Options: nosniff');
 ini_set('display_errors', '0');
 
 $configPath = __DIR__ . '/contact-config.php';
@@ -25,6 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 try {
 	validateConfig($config);
+	validateRequestSize((int) ($_SERVER['CONTENT_LENGTH'] ?? 0), $config['limits'] ?? []);
 
 	if (trim((string) ($_POST['company_website'] ?? '')) !== '') {
 		respond(200, [
@@ -107,7 +111,21 @@ function validateConfig(array $config): void
 	}
 
 	if ($password === '' || str_contains($password, 'TU_WPISZ_HASLO')) {
-		throw new RuntimeException('Uzupełnij hasło SMTP w pliku contact-config.php.');
+		throw new RuntimeException('Ustaw haslo SMTP w contact-config.local.php lub CONTACT_SMTP_PASSWORD.');
+	}
+}
+
+function validateRequestSize(int $contentLength, array $limits): void
+{
+	if ($contentLength <= 0) {
+		return;
+	}
+
+	$maxTotalSize = (int) ($limits['max_total_size'] ?? (15 * 1024 * 1024));
+	$maxRequestSize = (int) ($limits['max_request_size'] ?? ($maxTotalSize + (256 * 1024)));
+
+	if ($contentLength > $maxRequestSize) {
+		throw new ValidationException('Przesylane dane sa zbyt duze.');
 	}
 }
 
@@ -519,3 +537,4 @@ function mapUploadErrorToMessage(int $errorCode): string
 final class ValidationException extends RuntimeException
 {
 }
+

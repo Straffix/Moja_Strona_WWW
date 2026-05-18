@@ -683,7 +683,7 @@ a {
 			color 0.22s ease,
 			box-shadow 0.22s ease;
 
-		svg {
+		.icon-mask {
 			display: block;
 			width: 1.08rem;
 			height: 1.08rem;
@@ -752,7 +752,7 @@ a {
 		transform 0.22s ease,
 		text-shadow 0.22s ease;
 
-	svg {
+	.icon-mask {
 		display: block;
 		width: 1em;
 		height: 1em;
@@ -772,6 +772,95 @@ a {
 		outline: 1px solid colors.alpha(colors.$white, 0.72);
 		outline-offset: 0.25rem;
 	}
+}
+
+.icon-mask {
+	display: block;
+	flex: 0 0 auto;
+	width: 1em;
+	height: 1em;
+	background-color: currentColor;
+	-webkit-mask-position: center;
+	mask-position: center;
+	-webkit-mask-repeat: no-repeat;
+	mask-repeat: no-repeat;
+	-webkit-mask-size: contain;
+	mask-size: contain;
+}
+
+.icon-mask--palette {
+	-webkit-mask-image: url('../../img/icons/ui/palette.svg');
+	mask-image: url('../../img/icons/ui/palette.svg');
+}
+
+.icon-mask--chevron-right {
+	-webkit-mask-image: url('../../img/icons/ui/chevron-right.svg');
+	mask-image: url('../../img/icons/ui/chevron-right.svg');
+}
+
+.icon-mask--play {
+	-webkit-mask-image: url('../../img/icons/ui/play.svg');
+	mask-image: url('../../img/icons/ui/play.svg');
+}
+
+.icon-mask--github {
+	-webkit-mask-image: url('../../img/icons/ui/github.svg');
+	mask-image: url('../../img/icons/ui/github.svg');
+}
+
+.icon-mask--instagram {
+	-webkit-mask-image: url('../../img/icons/ui/instagram.svg');
+	mask-image: url('../../img/icons/ui/instagram.svg');
+}
+
+.icon-mask--facebook {
+	-webkit-mask-image: url('../../img/icons/ui/facebook.svg');
+	mask-image: url('../../img/icons/ui/facebook.svg');
+}
+
+.icon-mask--x-social {
+	-webkit-mask-image: url('../../img/icons/ui/x-social.svg');
+	mask-image: url('../../img/icons/ui/x-social.svg');
+}
+
+.icon-mask--arrow-up-right {
+	-webkit-mask-image: url('../../img/icons/ui/arrow-up-right.svg');
+	mask-image: url('../../img/icons/ui/arrow-up-right.svg');
+}
+
+.icon-mask--arrow-down-line {
+	-webkit-mask-image: url('../../img/icons/ui/arrow-down-line.svg');
+	mask-image: url('../../img/icons/ui/arrow-down-line.svg');
+}
+
+.icon-mask--music-wave {
+	-webkit-mask-image: url('../../img/icons/ui/music-wave.svg');
+	mask-image: url('../../img/icons/ui/music-wave.svg');
+}
+
+.icon-mask--guitar {
+	-webkit-mask-image: url('../../img/icons/ui/guitar.svg');
+	mask-image: url('../../img/icons/ui/guitar.svg');
+}
+
+.icon-mask--bike {
+	-webkit-mask-image: url('../../img/icons/ui/bike.svg');
+	mask-image: url('../../img/icons/ui/bike.svg');
+}
+
+.icon-mask--plane {
+	-webkit-mask-image: url('../../img/icons/ui/plane.svg');
+	mask-image: url('../../img/icons/ui/plane.svg');
+}
+
+.icon-mask--code-line {
+	-webkit-mask-image: url('../../img/icons/ui/code-line.svg');
+	mask-image: url('../../img/icons/ui/code-line.svg');
+}
+
+.icon-mask--paperclip {
+	-webkit-mask-image: url('../../img/icons/ui/paperclip.svg');
+	mask-image: url('../../img/icons/ui/paperclip.svg');
 }
 
 .theme-switcher {
@@ -811,7 +900,6 @@ a {
 		flex: 0 0 auto;
 		width: 2rem;
 		height: 2rem;
-		fill: currentColor;
 		filter: drop-shadow(0 0 0.45rem colors.alpha(colors.$white, 0.12))
 			drop-shadow(0 0 0.2rem colors.alpha(colors.$white, 0.08));
 	}
@@ -1181,10 +1269,10 @@ a {
 		display: block;
 		width: 1.22rem;
 		height: 1.22rem;
+	}
 
-		path {
-			stroke-width: 1.8;
-		}
+	&-control--prev &-chevron {
+		transform: rotate(180deg);
 	}
 
 	&-icon {
@@ -1211,12 +1299,6 @@ a {
 			align-items: center;
 			justify-content: center;
 			line-height: 0;
-
-			svg {
-				display: block;
-				width: 4rem;
-				height: 4rem;
-			}
 		}
 	}
 
@@ -1516,7 +1598,7 @@ a {
 		color: colors.alpha(colors.$white, 0.66);
 		background: colors.alpha(colors.$black, 0.16);
 
-		svg {
+		.icon-mask {
 			display: block;
 			width: 1.65rem;
 			height: 1.65rem;
@@ -1873,8 +1955,8 @@ a {
 		box-shadow 0.24s ease;
 }
 
-.panel-scroll-cta svg,
-.panel-scroll-top svg {
+.panel-scroll-cta .icon-mask,
+.panel-scroll-top .icon-mask {
 	display: block;
 }
 
@@ -1893,7 +1975,7 @@ a {
 	animation: panelScrollCtaPulse 1.85s ease-in-out infinite;
 }
 
-.panel-scroll-cta svg {
+.panel-scroll-cta .icon-mask {
 	width: clamp(1.55rem, 2.2vw, 1.9rem);
 	height: clamp(1.55rem, 2.2vw, 1.9rem);
 }
@@ -1937,7 +2019,7 @@ a {
 	transform: translate3d(0, 0.8rem, 0);
 }
 
-.panel-scroll-top svg {
+.panel-scroll-top .icon-mask {
 	width: 1.75rem;
 	height: 1.75rem;
 	transform: rotate(180deg);
@@ -2178,6 +2260,11 @@ a {
 	justify-items: start;
 	gap: 1.2rem;
 	min-width: 0;
+
+	p span {
+		color: rgb(195, 0, 45);
+		font-weight: bold;
+	}
 }
 
 .portfolio-work__copy h3 {
@@ -2257,7 +2344,7 @@ a {
 	outline: none;
 }
 
-.portfolio-work__link svg {
+.portfolio-work__link .icon-mask {
 	width: 1.6rem;
 	height: 1.6rem;
 }
@@ -3043,17 +3130,6 @@ a {
 	color: rgba(31, 86, 142, 0.96);
 }
 
-#contact-panel .contact-back__card-icon {
-	display: none;
-}
-
-#contact-panel .contact-back__card-icon svg,
-#contact-panel .contact-back__social-link-icon svg {
-	display: block;
-	width: 1.9rem;
-	height: 1.9rem;
-}
-
 #contact-panel .contact-back__card-copy {
 	display: grid;
 	gap: 0.3rem;
@@ -3132,16 +3208,12 @@ a {
 	height: 1.55rem;
 	flex: 0 0 auto;
 	color: colors.alpha(colors.$black, 0.82);
+	-webkit-mask-size: 1.34rem 1.34rem;
+	mask-size: 1.34rem 1.34rem;
 	transition:
 		color 0.22s ease,
 		transform 0.22s ease,
 		margin 0.22s ease;
-}
-
-#contact-panel .contact-back__social-link-icon svg {
-	width: 1.34rem;
-	height: 1.34rem;
-	color: #000;
 }
 
 #contact-panel .contact-back__social-link-text {
@@ -3473,10 +3545,13 @@ a {
 
 #contact-panel .contact-check__copy {
 	display: grid;
+	align-content: center;
 	gap: 0.25rem;
+	min-height: 2rem;
 	color: colors.alpha(colors.$black, 0.86);
 	font-size: 1.15rem;
 	font-weight: 600;
+	line-height: 1.15;
 }
 
 #contact-panel .contact-check__copy small {
@@ -3521,7 +3596,7 @@ a {
 	filter: none;
 }
 
-#contact-panel .contact-form__submit svg {
+#contact-panel .contact-form__submit .icon-mask {
 	display: block;
 	width: 1.8rem;
 	height: 1.8rem;

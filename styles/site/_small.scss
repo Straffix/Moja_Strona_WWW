@@ -65,7 +65,7 @@
 			height: 3.2rem;
 		}
 
-		.panel-scroll-cta svg {
+		.panel-scroll-cta .icon-mask {
 			width: 1.7rem;
 			height: 1.7rem;
 		}
@@ -549,11 +549,8 @@
 			width: 1.08rem;
 			height: 1.08rem;
 			color: currentColor;
-		}
-
-		#contact-panel .contact-back__social-link-icon svg {
-			width: 1.08rem;
-			height: 1.08rem;
+			-webkit-mask-size: 1.08rem 1.08rem;
+			mask-size: 1.08rem 1.08rem;
 		}
 
 		#contact-panel .contact-back__social-link-text {
@@ -661,7 +658,7 @@
 
 		#contact-panel .contact-check {
 			gap: 0.8rem;
-			align-items: flex-start;
+			align-items: center;
 			padding: 0.95rem 1rem;
 			background: colors.$white;
 		}
@@ -669,7 +666,7 @@
 		#contact-panel .contact-check__box {
 			width: 2rem;
 			height: 2rem;
-			margin-top: 0.1rem;
+			margin-top: 0;
 		}
 
 		#contact-panel .contact-check__box::after {

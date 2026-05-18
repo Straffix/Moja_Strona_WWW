@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', () => {
 	initSiteFooter()
 	initTaglineRotator()
 	initSiteIntro()
-	enhanceProjectMockups()
 	initProjectSliders()
 	initExpandingPanels()
 	initPanelScrollNavigation()
@@ -20,7 +19,11 @@ document.addEventListener('DOMContentLoaded', () => {
 		return
 	}
 
-	initNetworkCanvas(backgroundScene)
+	runAfterIntro(() => {
+		scheduleNonCriticalTask(() => {
+			initNetworkCanvas(backgroundScene)
+		}, 320)
+	})
 })
 
 function initSiteFooter() {
@@ -34,6 +37,50 @@ function initSiteFooter() {
 	for (const target of yearTargets) {
 		target.textContent = currentYear
 	}
+}
+
+function hydrateDeferredImages(root = document) {
+	const images = root.querySelectorAll('img[data-src]')
+
+	for (const image of images) {
+		const nextSource = image.dataset.src
+		if (!nextSource) {
+			continue
+		}
+
+		image.src = nextSource
+		image.removeAttribute('data-src')
+	}
+}
+
+function runAfterIntro(callback) {
+	if (document.documentElement.classList.contains('intro-complete')) {
+		callback()
+		return
+	}
+
+	const introObserver = new MutationObserver(() => {
+		if (!document.documentElement.classList.contains('intro-complete')) {
+			return
+		}
+
+		introObserver.disconnect()
+		callback()
+	})
+
+	introObserver.observe(document.documentElement, {
+		attributes: true,
+		attributeFilter: ['class'],
+	})
+}
+
+function scheduleNonCriticalTask(callback, timeout = 240) {
+	if (typeof window.requestIdleCallback === 'function') {
+		window.requestIdleCallback(() => callback(), { timeout })
+		return
+	}
+
+	window.setTimeout(callback, timeout)
 }
 
 function enhanceProjectMockups(root = document) {
@@ -385,12 +432,8 @@ function initProjectSlider(slider) {
 	}
 
 	const loadSlideMedia = slide => {
-		const lazyImages = slide.querySelectorAll('img[data-src]')
-
-		for (const image of lazyImages) {
-			image.src = image.dataset.src
-			image.removeAttribute('data-src')
-		}
+		hydrateDeferredImages(slide)
+		enhanceProjectMockups(slide)
 	}
 
 	const preloadNextSlide = () => {
@@ -1189,7 +1232,6 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 	let returnStateTimeoutId = 0
 	let revealStateTimeoutId = 0
 	let shouldReturnFocusToTrigger = false
-	let isHashFallbackActive = false
 	let swipeCloseDelta = 0
 	let swipeResetTimerId = 0
 
@@ -1379,8 +1421,6 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 			return
 		}
 
-		isHashFallbackActive = true
-
 		try {
 			const nextUrl = `${window.location.pathname}${window.location.search}#${encodeURIComponent(panel.id)}`
 			window.history.pushState(historyApi.createPanelHistoryState(panel.id), '', nextUrl)
@@ -1403,6 +1443,8 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 
 		panel.hidden = false
 		panel.setAttribute('aria-hidden', 'false')
+		hydrateDeferredImages(panel)
+		enhanceProjectMockups(panel)
 		panel.classList.remove('is-closing')
 		panel.classList.remove('is-open')
 		panel.classList.add('is-visible')
@@ -1447,7 +1489,6 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 		window.clearTimeout(closeTimerId)
 		window.clearTimeout(focusTimerId)
 		resetSwipeCloseGesture()
-		isHashFallbackActive = false
 		panel.classList.remove('is-closing')
 		panel.classList.remove('is-visible')
 		panel.hidden = true
@@ -1948,7 +1989,9 @@ function initNetworkCanvas(backgroundScene) {
 	let idleDisplayMode = 'landing'
 	let returnToIdleTimerId = 0
 	let sceneRect = backgroundScene.getBoundingClientRect()
+	let lastFrameTime = 0
 	let points = []
+	const networkFrameDuration = 1000 / 36
 
 	const syncEnabledState = () => {
 		const shouldEnable =
@@ -2047,6 +2090,13 @@ function initNetworkCanvas(backgroundScene) {
 			return
 		}
 
+		if (lastFrameTime && now - lastFrameTime < networkFrameDuration) {
+			animationFrameId = window.requestAnimationFrame(animate)
+			return
+		}
+
+		lastFrameTime = now
+
 		updatePointShift(points, now)
 		context.clearRect(0, 0, width, height)
 
@@ -2086,6 +2136,7 @@ function initNetworkCanvas(backgroundScene) {
 
 	function startAnimation() {
 		if (!animationFrameId) {
+			lastFrameTime = 0
 			animationFrameId = window.requestAnimationFrame(animate)
 		}
 	}
@@ -2095,6 +2146,8 @@ function initNetworkCanvas(backgroundScene) {
 			window.cancelAnimationFrame(animationFrameId)
 			animationFrameId = 0
 		}
+
+		lastFrameTime = 0
 	}
 
 	function clearReturnToIdleTimer() {
@@ -2593,6 +2646,19 @@ function initThemeSwitcher() {
 		const storedTheme = getLocalStorageTheme(storageKey) || getCookieTheme(storageKey)
 		if (themes.some(theme => theme.id === storedTheme)) {
 			return storedTheme
+		}
+
+		return getDefaultTheme()
+	}
+
+	function getDefaultTheme() {
+		const htmlTheme = document.documentElement.dataset.pageTheme || ''
+		const bodyTheme = document.body?.dataset.pageTheme || ''
+		const pageTheme = page.dataset.pageTheme || ''
+		const fallbackTheme = pageTheme || htmlTheme || bodyTheme
+
+		if (themes.some(theme => theme.id === fallbackTheme)) {
+			return fallbackTheme
 		}
 
 		return themes[0].id
