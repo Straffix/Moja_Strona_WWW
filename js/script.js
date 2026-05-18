@@ -1223,6 +1223,15 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 		panel.style.backgroundColor = 'rgba(255, 255, 255, 0.98)'
 	}
 
+	const resetPanelScrollPosition = () => {
+		if (!(panelScrollRoot instanceof HTMLElement)) {
+			return
+		}
+
+		panelScrollRoot.scrollTop = 0
+		panelScrollRoot.scrollLeft = 0
+	}
+
 	const focusCloseButton = () => {
 		closeButton.focus({ preventScroll: true })
 	}
@@ -1397,6 +1406,7 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 		panel.classList.remove('is-closing')
 		panel.classList.remove('is-open')
 		panel.classList.add('is-visible')
+		resetPanelScrollPosition()
 		activatePagePanelState()
 		panel.dispatchEvent(new CustomEvent('tilepanel:open'))
 		trigger.setAttribute('aria-expanded', 'true')
@@ -1409,6 +1419,7 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 
 		if (shouldSkipPanelMotion()) {
 			syncPanelOpenState()
+			resetPanelScrollPosition()
 			panel.classList.add('is-open')
 			if (openedWithKeyboard) {
 				focusCloseButton()
@@ -1419,6 +1430,7 @@ function initExpandingPanel(trigger, panel, closeButton, reduceMotionQuery, focu
 		panel.getBoundingClientRect()
 		window.requestAnimationFrame(() => {
 			syncPanelOpenState()
+			resetPanelScrollPosition()
 			panel.classList.add('is-open')
 		})
 

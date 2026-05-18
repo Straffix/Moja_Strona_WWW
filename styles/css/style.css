@@ -3167,10 +3167,13 @@ a {
 
 #contact-panel .contact-check__copy {
   display: grid;
+  align-content: center;
   gap: 0.25rem;
+  min-height: 2rem;
   color: rgba(0, 0, 0, 0.86);
   font-size: 1.15rem;
   font-weight: 600;
+  line-height: 1.15;
 }
 
 #contact-panel .contact-check__copy small {
@@ -5383,14 +5386,14 @@ a {
   }
   #contact-panel .contact-check {
     gap: 0.8rem;
-    align-items: flex-start;
+    align-items: center;
     padding: 0.95rem 1rem;
     background: #ffffff;
   }
   #contact-panel .contact-check__box {
     width: 2rem;
     height: 2rem;
-    margin-top: 0.1rem;
+    margin-top: 0;
   }
   #contact-panel .contact-check__box::after {
     left: 0.56rem;
